@@ -715,7 +715,7 @@ function run_lifecycle {
         echo "INFO: Applying configs from ${config_path}"
 
         find "${config_path}" -type f \( -iname "*.yaml" -o -iname "*.yml" \) \
-        | sort \
+        | sort -V \
         | while IFS= read -r config; do
             run_lifecycle_for_config "${config}"
         done

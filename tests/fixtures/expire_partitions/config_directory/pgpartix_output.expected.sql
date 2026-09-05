@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS test.events_2025_01;
+
+DROP TABLE IF EXISTS test.measurements_2025_01;

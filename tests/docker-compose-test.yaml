@@ -26,8 +26,12 @@ services:
       - bash
       - -c
       - |
+        set -euo pipefail
+
+        pgp-start
+
         if [[ "$${COVERAGE}" == "true" ]]; then
           tests/coverage.sh
-          exit 0
+        else
+          bats tests/test_*.sh
         fi
-        pgp-start && bats tests/test_*.sh

@@ -11,4 +11,4 @@ lifecycle:
       output:
         file:
           naming:
-            template: "measurements.sql"
+            template: "pgpartix_output.sql"

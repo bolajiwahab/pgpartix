@@ -76,58 +76,33 @@ function run_config_file() {
 }
 
 function run_config_directory() {
-    local fixture="$1"
-    local expected="${fixture}/config.expected.sql"
-    local result="${fixture}/pgpartix_output.sql"
-
-    pgp-run-lifecycle -c "${fixture}"
-
-    diff -u \
-        "${expected}" \
-        "${result}"
-
-    createdb --template="${PGP_DATABASE}" pgpartix_test_$$
-    psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --dbname pgpartix_test_$$ --file "${result}"
-    dropdb pgpartix_test_$$
-
-    rm -f "${result}"
-}
-
-function cleanup_expire_config_directory() {
-    local fixture="${1}"
-    local test_db="${2:-}"
-
-    if [[ -n "${test_db}" ]]; then
-        dropdb --if-exists "${test_db}"
-    fi
-
-    psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
-    rm -f "${fixture}/events.sql" "${fixture}/measurements.sql"
-}
-
-function run_expire_config_directory() {
     local fixture="${1}"
     local expected
     local result
     local test_db="pgpartix_expire_test_$$"
 
-    trap 'cleanup_expire_config_directory "${fixture}" "${test_db}"' ERR INT TERM
+    expected="${fixture}/pgpartix_output.expected.sql"
+    result="${fixture}/pgpartix_output.sql"
+
+    trap 'cleanup "${fixture}" "${test_db} ${result}"' ERR INT TERM
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/setup.sql"
+
     pg_ctl reload
 
     pgp-run-lifecycle -c "${fixture}/configs"
 
+    diff -u "${expected}" "${result}"
+
     createdb --template="${PGP_DATABASE}" "${test_db}"
 
-    for expected in "${fixture}"/*.expected.sql; do
-        result="${expected%.expected.sql}.sql"
-        diff -u "${expected}" "${result}"
-        psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --dbname "${test_db}" --file "${result}"
-    done
+    psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --dbname "${test_db}" --file "${result}"
 
-    cleanup_expire_config_directory "${fixture}" "${test_db}"
-    trap - ERR INT TERM
+    dropdb "${test_db}"
+
+    psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
+
+    rm -f "${result}"
 }
 
 @test "pgp-run-lifecycle shows help" {
@@ -345,7 +320,7 @@ function run_expire_config_directory() {
 @test "pgp-run-lifecycle processes a config directory" {
     local fixture="tests/fixtures/expire_partitions/config_directory"
 
-    run run_expire_config_directory "${fixture}"
+    run run_config_directory "${fixture}"
 
     [ "${status}" -eq 0 ]
     grep -Fq "Applied configs from ${fixture}/configs" <<< "${output}"
@@ -538,7 +513,7 @@ for fixture in tests/fixtures/make_partitions/**/*.{yaml,yml}; do
     [[ "${fixture}" == */sql_failures/* ]] && continue
     directory="$(basename "$(dirname "${fixture}")")"
     bats_test_function \
-        --description "testing ${directory} with $(basename "${fixture}")" \
+        --description "pgp-run-lifecycle: ${directory} with $(basename "${fixture}")" \
         -- run_config_file "${fixture}"
 done
 
@@ -549,7 +524,7 @@ for fixture in tests/fixtures/expire_partitions/**/*.{yaml,yml}; do
     if [[ -f "${expected}" ]]; then
         directory="$(basename "$(dirname "${fixture}")")"
         bats_test_function \
-            --description "testing ${directory} with $(basename "${fixture}")" \
+            --description "pgp-run-lifecycle: ${directory} with $(basename "${fixture}")" \
             -- run_config_file "${fixture}"
     fi
 done

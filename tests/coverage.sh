@@ -5,8 +5,6 @@ set -euo pipefail
 MIN_COVERAGE="${MIN_COVERAGE:-100}"
 COVERAGE_DIR="${COVERAGE_DIR:-coverage}"
 
-pgp-start
-
 kcov \
   --clean \
   --dump-summary \
@@ -59,5 +57,3 @@ BEGIN {
     exit 1
   }
 }'
-
-exit 0
