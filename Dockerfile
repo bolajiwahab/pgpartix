@@ -1,11 +1,11 @@
 ARG PG_MAJOR_VERSION=18
 
-FROM ghcr.io/astral-sh/uv:0.12.17@sha256:10787c682e4184e4f290de1171fd4703dc63de99221f10fe1c99002ce7fa9acc AS uv
+FROM ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 AS uv
 
 FROM postgres:${PG_MAJOR_VERSION}-trixie AS build
 
 # renovate: datasource=github-releases depName=mikefarah/yq
-ARG YQ_VERSION=4.53.6
+ARG YQ_VERSION=4.54.1
 ARG TARGETOS
 ARG TARGETARCH
 
