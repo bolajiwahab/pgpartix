@@ -10,7 +10,7 @@ pgpartix inspects a PostgreSQL database and writes migration files for missing a
 - An existing directory for generated migration files.
 - A database containing the parent tables and any configured schemas, tablespaces, or template tables.
 
-The packaged container supplies PostgreSQL setup utilities, the pgpartix CLIs, pgrubic, Git, and GitHub CLI.
+The packaged image supplies PostgreSQL setup utilities, the pgpartix CLIs, pgrubic, Git, and GitHub CLI.
 
 ## Persisting migration files onto the host filesystem
 
@@ -26,7 +26,7 @@ If the container or execution environment runs as `root`, run `pgp-start` as the
 runuser -u pgpuser -- pgp-start
 ```
 
-The `pgpartix` container runs as `pgpuser` by default, so this is only required when the container user is overridden to `root` or the execution environment starts the container as `root`.
+The `pgpartix` container runs as `pgpuser` by default, so this is only required when the container user is overridden to `root` or the execution environment runs the container as `root`.
 
 ## Install the image
 
