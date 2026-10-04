@@ -10,7 +10,7 @@ pgpartix generates reviewable PostgreSQL partition-lifecycle migrations. Users c
 
 ## Start here
 
-1. [Getting started](getting-started.md) - install the container, prepare a schema catalog, and generate the first migrations.
+1. [Getting started](getting-started.md) - run the container, prepare a schema catalog, and generate the first migrations.
 2. [Configuration reference](configuration.md) - configure partition creation, expiration, naming, templates, storage, and table overrides.
 3. [Optional GitHub Actions automation](github-actions.md) - run reconciliation on a GitHub schedule and create PRs through a dedicated GitHub App.
 

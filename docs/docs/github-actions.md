@@ -31,7 +31,7 @@ For GitHub users, this avoids requiring a separate PR action with a second confi
 
 ## Running as root
 
-The image runs as a non-root user by default. When using it as a GitHub Actions job container, set `container.options: --user root`, as shown in the [complete scheduled workflow](#complete-scheduled-workflow) below. GitHub requires Docker actions and job containers to be run by the default Docker user (root) in order to be able to access the `GITHUB_WORKSPACE` directory; see [`USER` reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dockerfile-support#user) in GitHub's documentation. This requirement is specific to running the image as a job/action container - a plain `docker run` (see [Getting started](getting-started.md)) does not need it.
+The container runs as a non-root user by default. When using it as a GitHub Actions job container, set `container.options: --user root`, as shown in the [complete scheduled workflow](#complete-scheduled-workflow) below. GitHub requires Docker actions and job containers to be run by the default Docker user (root) in order to be able to access the `GITHUB_WORKSPACE` directory; see [`USER` reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dockerfile-support#user) in GitHub's documentation. This requirement is specific to running the container as a job/action - a plain `docker run` (see [Getting started](getting-started.md)) does not need it.
 
 ## Recommended authentication: a dedicated GitHub App
 
