@@ -10,7 +10,7 @@ pgpartix inspects a PostgreSQL database and writes migration files for missing a
 - An existing directory for generated migration files.
 - A database containing the parent tables and any configured schemas, tablespaces, or template tables.
 
-The packaged image supplies PostgreSQL setup utilities, the pgpartix CLIs, pgrubic, Git, and GitHub CLI.
+The packaged image includes PostgreSQL setup utilities, the pgpartix CLIs, pgrubic, Git, and GitHub CLI.
 
 ## Persisting migration files onto the host filesystem
 
