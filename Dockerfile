@@ -5,7 +5,7 @@ FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b98
 FROM postgres:${PG_MAJOR_VERSION}-trixie AS build
 
 # renovate: datasource=github-releases depName=mikefarah/yq
-ARG YQ_VERSION=4.54.1
+ARG YQ_VERSION=4.54.2
 ARG TARGETOS
 ARG TARGETARCH
 
