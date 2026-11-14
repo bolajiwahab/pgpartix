@@ -10,7 +10,8 @@ ARG TARGETOS
 ARG TARGETARCH
 
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-ENV PGDATA="/var/lib/postgresql/pgpartix"
+# Keep the disposable cluster under the directory owned by PGP_OS_USER.
+ENV PGDATA="/var/lib/pgpartix/data"
 
 # Install OS dependencies
 RUN apt-get update \
