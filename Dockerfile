@@ -49,10 +49,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies in an isolated environment.
-COPY src/requirements.txt ./
+COPY pyproject.toml uv.lock /opt/pgpartix-project/
 RUN --mount=type=bind,from=uv,source=/uv,target=/usr/local/bin/uv \
-    uv venv --python python3 /opt/pgpartix \
-    && uv pip install --python /opt/pgpartix/bin/python --no-cache -r requirements.txt \
+    UV_PROJECT_ENVIRONMENT=/opt/pgpartix uv sync \
+        --project /opt/pgpartix-project --python python3 --no-managed-python \
+        --locked --no-dev --no-cache \
     && ln -s /opt/pgpartix/bin/check-jsonschema /usr/local/bin/check-jsonschema \
     && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic
 
