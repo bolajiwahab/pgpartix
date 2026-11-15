@@ -2,7 +2,15 @@ ARG PG_MAJOR_VERSION=18
 
 FROM ghcr.io/astral-sh/uv:0.13.8@sha256:5cc1805e2426484abca4ad46ea783bab281fdb225fd82d8ce6d66a81254bac85 AS uv
 
-FROM postgres:${PG_MAJOR_VERSION}-trixie AS build
+# Pin each supported major to a multi-platform manifest index. BuildKit selects
+# only the stage requested by PG_MAJOR_VERSION; Renovate updates these digests.
+FROM postgres:14-trixie@sha256:980b7cb415aa0f812f65bdec8f6f599be408d8ed9c83ffcaa12650eac397b264 AS postgres14
+FROM postgres:15-trixie@sha256:5a407822929c3789ff5154d3d35bd7e2090318149344c8a3d4ca942b035822ed AS postgres15
+FROM postgres:16-trixie@sha256:63e83b5a3dc36a917dccb76fe1bd2ac51f1ec9c1deb47ff20d4f04233bf6eae9 AS postgres16
+FROM postgres:17-trixie@sha256:846a7ddaa67a4b354ae1d21087b683901aa6113a4ed626d3787cfbf6c85e3e07 AS postgres17
+FROM postgres:18-trixie@sha256:b9f6b8ff03b62f3cfd9d9ba3fe56226a9991c79d3fb46fd46536263bf02be553 AS postgres18
+
+FROM postgres${PG_MAJOR_VERSION} AS build
 
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=4.54.3

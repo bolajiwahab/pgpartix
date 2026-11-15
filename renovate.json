@@ -17,6 +17,19 @@
   ],
   "packageRules": [
     {
+      "description": "Keep PostgreSQL base images pinned to manifest digests",
+      "matchManagers": ["dockerfile"],
+      "matchDepNames": ["postgres"],
+      "pinDigests": true
+    },
+    {
+      "description": "Preserve the PostgreSQL major assigned to each build stage",
+      "matchManagers": ["dockerfile"],
+      "matchDepNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "Group dependencies declared in Dockerfiles",
       "matchManagers": [
         "dockerfile",
