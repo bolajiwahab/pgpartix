@@ -153,6 +153,10 @@ dmypy.json
 # pgrubic
 .pgrubic_cache
 
+# Trivy scan reports and cache
+trivy-*-results*.sarif
+.trivycache/
+
 # Pyre type checker
 .pyre/
 

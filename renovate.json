@@ -17,9 +17,9 @@
   ],
   "packageRules": [
     {
-      "description": "Keep PostgreSQL base images pinned to manifest digests",
+      "description": "Keep PostgreSQL and coverage images pinned to manifest digests",
       "matchManagers": ["dockerfile"],
-      "matchDepNames": ["postgres"],
+      "matchDepNames": ["postgres", "kcov/kcov"],
       "pinDigests": true
     },
     {

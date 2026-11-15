@@ -387,6 +387,55 @@ function run_config_directory() {
     [ ! -e "${result}" ]
 }
 
+@test "pgp-run-lifecycle reports timestamp and template lookup errors" {
+    local fake_bin="${BATS_TEST_TMPDIR}/bin"
+    local real_psql
+    local scenario fixture config query mode expected
+    local marker="${BATS_TEST_TMPDIR}/lookup-called"
+
+    real_psql="$(command -v psql)"
+    mkdir -p "${fake_bin}"
+    cat > "${fake_bin}/psql" << 'EOF'
+#!/bin/bash
+sql="$(cat)"
+# Preserve the preliminary upper-bound lookup when testing latest templates.
+if [[ "${sql}" == *"${LOOKUP_QUERY}"* && "${sql}" != *"SELECT upper_bound"* ]]; then
+    touch "${LOOKUP_MARKER}"
+    [[ "${LOOKUP_MODE}" == "empty" ]] && exit 0
+    exit 1
+fi
+exec "${REAL_PSQL}" "$@" <<< "${sql}"
+EOF
+    chmod +x "${fake_bin}/psql"
+
+    for scenario in \
+        'start_timestamp|now|SELECT now();|error|failed to get current timestamp' \
+        'template_sources|default|pgpartix.get_default_partition(|error|failed to get default partition' \
+        'template_sources|default|pgpartix.get_default_partition(|empty|Default partition for table test.transactions not found' \
+        'template_sources|latest|pgpartix.get_latest_partition(|error|failed to get latest partition' \
+        'template_sources|latest|pgpartix.get_latest_partition(|empty|Latest partition for table test.transactions not found' \
+        'template_sources|current|pgpartix.get_current_partition(|error|failed to get current partition' \
+        'template_sources|current|pgpartix.get_current_partition(|empty|Current partition for table test.transactions not found'; do
+        IFS='|' read -r fixture config query mode expected <<< "${scenario}"
+        fixture="tests/fixtures/make_partitions/${fixture}"
+        rm -f "${marker}"
+
+        psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/setup.sql"
+        pg_ctl reload
+
+        run env PATH="${fake_bin}:${PATH}" REAL_PSQL="${real_psql}" \
+            LOOKUP_QUERY="${query}" LOOKUP_MODE="${mode}" LOOKUP_MARKER="${marker}" \
+            pgp-run-lifecycle -c "${fixture}/${config}.yaml"
+
+        psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
+
+        [ -e "${marker}" ]
+        [ "${status}" -eq 1 ]
+        grep -Fq "making partitions failed for 1 table(s)" <<< "${output}"
+        grep -Fq "${expected}" <<< "${output}"
+    done
+}
+
 @test "pgp-run-lifecycle reports make database failures" {
     local fixture="tests/fixtures/expire_partitions/database_failure"
     local expected="${fixture}/pgpartix_output.expected.sql"
