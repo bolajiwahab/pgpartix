@@ -2,7 +2,7 @@
 # yamllint disable rule:line-length
 name: Partition lifecycle (reusable)
 
-on:  # yamllint disable-line rule:truthy
+on:
   workflow_call:
     inputs:
       runs_on:

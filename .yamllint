@@ -5,5 +5,11 @@ rules:
   line-length:
     max: 90
 
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
+      - "on"
+
 ignore: |
   config.sample.yaml
