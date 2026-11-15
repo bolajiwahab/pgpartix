@@ -4,15 +4,23 @@ Bug reports, feature requests, code changes, and documentation improvements are 
 
 ## Development
 
-**pgpartix** is packaged as a Docker image. It is developed with **Bash** and **SQL**. For development, you will **Docker** need **pre-commit**.
+**pgpartix** is packaged as a Docker image and developed with **Bash** and **SQL**.
+Install **Docker** and a local [**uv**](https://docs.astral.sh/uv/getting-started/installation/)
+to bootstrap the development environment. Run these commands from the repository root.
 
-1. Install **pre-commit**:
+1. Create the development environment, including the pinned uv, pre-commit, and documentation tools:
 
     ```console
-    python3.12 -m pip install --upgrade pre-commit
+    uv sync --locked --group tooling --group docs
     ```
 
-2. Install the Git hooks:
+2. Activate the development environment:
+
+    ```console
+    source .venv/bin/activate
+    ```
+
+3. Install the Git hooks:
 
     ```console
     pre-commit install
@@ -94,6 +102,19 @@ docs/schema_doc_generator.sh
 ```
 
 Preview `docs/docs/schema.html` in a browser.
+
+To build the documentation site after activating the development environment:
+
+```bash
+cd docs
+uv run --locked --group tooling --group docs zensical build --clean
+```
+
+To preview changes to the documentation, from the parent directory, use:
+
+```bash
+zensical serve --config-file docs/mkdocs.yml --dev-addr 127.0.0.1:8000
+```
 
 ## Release
 

@@ -18,6 +18,9 @@ on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: "0 0 * * *"  # Run daily at midnight UTC
 
+env:
+  DEFAULT_PYTHON_VERSION: 3.12
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -26,13 +29,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
-          python-version: "3.12"
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
+          version: "0.13.7"
 
-      - name: Install and run pre-commit
-        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
+      - name: Install dependencies
+        run: uv sync --locked --only-group tooling --only-group dev
+
+      - name: Run pre-commit
+        run: uv run --locked --only-group tooling --only-group dev pre-commit run --show-diff-on-failure --all-files
 
   coverage:
     runs-on: ubuntu-latest

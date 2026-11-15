@@ -1,6 +1,8 @@
-# The runtime image only consumes src; the test target additionally consumes tests.
+# Include dependency metadata, runtime sources, and test sources.
 **
 !Dockerfile
+!pyproject.toml
+!uv.lock
 !src/
 !src/**
 !tests/

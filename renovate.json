@@ -42,9 +42,9 @@
       "groupSlug": "docker-updates"
     },
     {
-      "description": "Group dependencies declared in Python requirements files",
+      "description": "Group Python dependencies",
       "matchManagers": [
-        "pip_requirements"
+        "pep621"
       ],
       "groupName": "python updates",
       "groupSlug": "python-updates"
