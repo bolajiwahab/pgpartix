@@ -42,7 +42,7 @@ jobs:
 
       - name: Build site
         working-directory: docs
-        run: ../.venv/bin/uv run --locked --only-group tooling --only-group docs zensical build --clean
+        run: uv run --locked --only-group tooling --only-group docs zensical build --clean
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5
