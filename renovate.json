@@ -2,8 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":disableDependencyDashboard"
+    ":disableDependencyDashboard",
+    ":maintainLockFilesWeekly"
   ],
+  "description": "Schedule dependency updates weekly on Saturday",
+  "schedule": ["on saturday"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["on saturday"]
+  },
   "customManagers": [
     {
       "customType": "regex",
