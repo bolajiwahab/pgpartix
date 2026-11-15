@@ -59,6 +59,15 @@ repos:
         types: [shell]
         stages: [pre-commit]
 
+  - repo: local
+    hooks:
+      - id: hadolint
+        name: Lint Dockerfiles
+        entry: ghcr.io/hadolint/hadolint:v2.15.1 hadolint
+        language: docker_image
+        stages: [pre-commit]
+        types: [dockerfile]
+
   # Formatters should be run late so that they can re-format
   # any prior changes
   - repo: https://github.com/scop/pre-commit-shfmt

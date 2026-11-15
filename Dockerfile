@@ -12,7 +12,11 @@ FROM postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803
 FROM postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065 AS postgres17-alpine
 FROM postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95 AS postgres18-alpine
 
+# Select one of the digest-pinned stages above.
+# hadolint ignore=DL3006
 FROM postgres${PG_MAJOR_VERSION}-alpine AS build
+
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=4.54.3
@@ -24,7 +28,15 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 ENV PGDATA="/var/lib/pgpartix/data"
 
 # Install OS dependencies
-RUN apk add --no-cache bash ca-certificates coreutils findutils git github-cli grep python3 sed wget \
+RUN apk add --no-cache \
+        'bash~5.3' \
+        'ca-certificates~20261020' \
+        'coreutils~9.11' \
+        'findutils~4.10' \
+        'git~2.54' \
+        'github-cli~2.97' \
+        'python3~3.14' \
+    && apk add --no-cache --virtual .download-deps 'wget~1.25' \
     # Install yq
     && yq_binary="yq_${TARGETOS}_${TARGETARCH}" \
     && wget --quiet "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/${yq_binary}" --output-document=/usr/bin/yq \
@@ -39,7 +51,8 @@ RUN apk add --no-cache bash ca-certificates coreutils findutils git github-cli g
     && git config --system --add safe.directory '*' \
     && echo '.pgrubic_cache/' > /etc/gitexclude \
     && git config --system core.excludesFile /etc/gitexclude \
-    && apk del wget
+    && apk del .download-deps \
+    && rm -f /usr/bin/wget
 
 # Install Python dependencies in an isolated environment.
 COPY pyproject.toml uv.lock /opt/pgpartix-project/
@@ -48,7 +61,8 @@ RUN --mount=type=bind,from=uv,source=/uv,target=/usr/local/bin/uv \
         --project /opt/pgpartix-project --python python3 --no-managed-python \
         --locked --no-dev --no-cache \
     && ln -s /opt/pgpartix/bin/check-jsonschema /usr/local/bin/check-jsonschema \
-    && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic
+    && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic \
+    && rm -rf /opt/pgpartix-project
 
 ENV PATH="/opt/pgpartix/bin:${PATH}"
 
@@ -76,14 +90,20 @@ CMD ["/bin/bash"]
 
 FROM build AS test
 
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
 ARG BATS_VERSION=1.14.0
 ARG BATS_SHA256=bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177
 
-# Keep coverage tooling and its shared libraries in the test image only.
+# Install test dependencies and create the tablespace fixture root.
 COPY --from=kcov /usr/local/bin/kcov* /usr/local/bin/
 
-# Install test dependencies and create the tablespace fixture root.
-RUN apk add --no-cache libcurl libdw libstdc++ wget zlib \
+RUN apk add --no-cache \
+        'libcurl~8.23' \
+        'libdw~0.195' \
+        'libstdc++~15.2' \
+        'zlib~1.4' \
+    && apk add --no-cache --virtual .download-deps 'wget~1.25' \
     && wget --quiet \
         "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz" \
         --output-document=/tmp/bats-core.tar.gz \
@@ -94,7 +114,8 @@ RUN apk add --no-cache libcurl libdw libstdc++ wget zlib \
     && rm -rf bats-core-${BATS_VERSION} \
     && mkdir -p /var/lib/pgpartix/tablespaces \
     && chown "${PGP_OS_USER}:${PGP_OS_USER}" /var/lib/pgpartix/tablespaces \
-    && apk del wget
+    && apk del .download-deps \
+    && rm -f /usr/bin/wget
 
 # Test changes should not invalidate the dependency-installation layer.
 COPY --chown=${PGP_OS_USER}:${PGP_OS_USER} tests tests
