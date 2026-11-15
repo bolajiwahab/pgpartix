@@ -19,9 +19,7 @@ scan:
     - .git
     - .venv
     - .tox
-    # - .pgpartix
-    # - .pgrubic_cache
-    # - coverage
-    # - docs/site
+    - .pgrubic_cache
+    - coverage
 vulnerability:
   ignore-unfixed: false

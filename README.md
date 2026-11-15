@@ -5,6 +5,8 @@
 [![release](https://github.com/bolajiwahab/pgpartix/actions/workflows/release.yaml/badge.svg)](https://github.com/bolajiwahab/pgpartix/actions/workflows/release.yaml)
 ![GitHub License](https://img.shields.io/github/license/bolajiwahab/pgpartix)
 ![GitHub Container Registry](https://ghcr-badge.egpl.dev/bolajiwahab/pgpartix/tags?color=%2344cc11&ignore=latest&n=5&label=image+tags&trim=)
+[![Trivy](https://img.shields.io/badge/Trivy-Container%20Security-1904DA?logo=trivy&logoColor=white)](https://trivy.dev/)
+[![Hadolint](https://img.shields.io/badge/Hadolint-Dockerfile%20Linting-0D597F?logo=docker&logoColor=white)](https://github.com/hadolint/hadolint)
 
 pgpartix is a PostgreSQL partition-lifecycle migration generator. It inspects a PostgreSQL database and writes migrations for partitions that should be created or expired.
 
