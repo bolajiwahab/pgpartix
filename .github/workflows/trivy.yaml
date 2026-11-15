@@ -1,0 +1,127 @@
+---
+# yamllint disable rule:line-length
+name: Trivy Security Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PACKAGE_NAME: "pgpartix"
+  TRIVY_LIMIT_SEVERITIES_FOR_SARIF: "true"
+  TRIVY_VERSION: v0.76.1
+  TRIVY_CONFIG_FILE: trivy.yaml
+  TRIVY_REPO_REPORT: trivy-repo-results
+  TRIVY_IMAGE_REPORT: trivy-image-results
+  TRIVY_REPORT_FORMAT: sarif
+  RETENTION_DAYS: 14
+
+jobs:
+  trivy-repo-scan:
+    name: Trivy Repository Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Scan repository vulnerabilities and secrets with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          scan-type: fs
+          scan-ref: .
+          format: ${{ env.TRIVY_REPORT_FORMAT }}
+          output: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
+          limit-severities-for-sarif: ${{ env.TRIVY_LIMIT_SEVERITIES_FOR_SARIF }}
+          trivy-config: ${{ env.TRIVY_CONFIG_FILE }}
+
+      - name: Upload repository findings to Code Scanning
+        if: ${{ always() && hashFiles(format('{0}.{1}', env.TRIVY_REPO_REPORT, env.TRIVY_REPORT_FORMAT)) != '' }}
+        # Retain the report below when Code Scanning is unavailable.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        with:
+          sarif_file: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
+          category: trivy-repo
+
+      - name: Retain repository SARIF report
+        if: ${{ always() && hashFiles(format('{0}.{1}', env.TRIVY_REPO_REPORT, env.TRIVY_REPORT_FORMAT)) != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
+        with:
+          name: ${{ env.TRIVY_REPO_REPORT }}
+          path: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
+          retention-days: ${{ env.RETENTION_DAYS }}
+
+  trivy-image-scan:
+    name: Trivy Image Scan (PostgreSQL ${{ matrix.postgresql }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        postgresql: [14, 15, 16, 17, 18]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
+
+      - name: Build image for scanning
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
+        with:
+          context: .
+          file: Dockerfile
+          target: runtime
+          build-args: PG_MAJOR_VERSION=${{ matrix.postgresql }}
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.PACKAGE_NAME }}:scan-pg${{ matrix.postgresql }}
+          cache-from: |
+            type=gha,scope=trivy-image-pg${{ matrix.postgresql }}
+            type=gha
+          cache-to: type=gha,scope=trivy-image-pg${{ matrix.postgresql }},mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ env.PACKAGE_NAME }}:scan-pg${{ matrix.postgresql }}
+          version: ${{ env.TRIVY_VERSION }}
+          format: ${{ env.TRIVY_REPORT_FORMAT }}
+          output: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}
+          limit-severities-for-sarif: ${{ env.TRIVY_LIMIT_SEVERITIES_FOR_SARIF }}
+          trivy-config: ${{ env.TRIVY_CONFIG_FILE }}
+
+      - name: Upload image findings to Code Scanning
+        if: ${{ always() && hashFiles(format('{0}-pg{1}.{2}', env.TRIVY_IMAGE_REPORT, matrix.postgresql, env.TRIVY_REPORT_FORMAT)) != '' }}
+        # Retain the report below when Code Scanning is unavailable.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        with:
+          sarif_file: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}
+          category: trivy-image-pg${{ matrix.postgresql }}
+
+      - name: Retain image SARIF report
+        if: ${{ always() && hashFiles(format('{0}-pg{1}.{2}', env.TRIVY_IMAGE_REPORT, matrix.postgresql, env.TRIVY_REPORT_FORMAT)) != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
+        with:
+          name: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}
+          path: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}
+          retention-days: ${{ env.RETENTION_DAYS }}

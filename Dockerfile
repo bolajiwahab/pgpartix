@@ -2,15 +2,21 @@ ARG PG_MAJOR_VERSION=18
 
 FROM ghcr.io/astral-sh/uv:0.13.8@sha256:5cc1805e2426484abca4ad46ea783bab281fdb225fd82d8ce6d66a81254bac85 AS uv
 
-# Pin each supported major to a multi-platform manifest index. BuildKit selects
-# only the stage requested by PG_MAJOR_VERSION; Renovate updates these digests.
-FROM postgres:14-trixie@sha256:980b7cb415aa0f812f65bdec8f6f599be408d8ed9c83ffcaa12650eac397b264 AS postgres14
-FROM postgres:15-trixie@sha256:5a407822929c3789ff5154d3d35bd7e2090318149344c8a3d4ca942b035822ed AS postgres15
-FROM postgres:16-trixie@sha256:63e83b5a3dc36a917dccb76fe1bd2ac51f1ec9c1deb47ff20d4f04233bf6eae9 AS postgres16
-FROM postgres:17-trixie@sha256:846a7ddaa67a4b354ae1d21087b683901aa6113a4ed626d3787cfbf6c85e3e07 AS postgres17
-FROM postgres:18-trixie@sha256:b9f6b8ff03b62f3cfd9d9ba3fe56226a9991c79d3fb46fd46536263bf02be553 AS postgres18
+FROM kcov/kcov:latest-alpine@sha256:6e6f3f62461100d789ae5b91e0534b65ff1b88f47564ee8edc845096835cd99f AS kcov
 
-FROM postgres${PG_MAJOR_VERSION} AS build
+# Pin each supported major to a multi-platform manifest index. BuildKit selects
+# only the stage requested by PG_MAJOR_VERSION; Renovate updates the pins.
+FROM postgres:14-alpine@sha256:0e6cd607ed90b858005f39da5931dad42ff1ea4be37a897ffe325414b0bab029 AS postgres14-alpine
+FROM postgres:15-alpine@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba AS postgres15-alpine
+FROM postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663 AS postgres16-alpine
+FROM postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065 AS postgres17-alpine
+FROM postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95 AS postgres18-alpine
+
+# Select one of the digest-pinned stages above.
+# hadolint ignore=DL3006
+FROM postgres${PG_MAJOR_VERSION}-alpine AS build
+
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # renovate: datasource=github-releases depName=mikefarah/yq
 ARG YQ_VERSION=4.54.3
@@ -22,15 +28,15 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 ENV PGDATA="/var/lib/pgpartix/data"
 
 # Install OS dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget git ca-certificates python3 \
-    # Install GitHub CLI
-    && mkdir -p -m 755 /etc/apt/keyrings \
-    && wget --quiet -O- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends gh \
+RUN apk add --no-cache \
+        'bash~5.3' \
+        'ca-certificates~20261020' \
+        'coreutils~9.11' \
+        'findutils~4.10' \
+        'git~2.54' \
+        'github-cli~2.97' \
+        'python3~3.14' \
+    && apk add --no-cache --virtual .download-deps 'wget~1.25' \
     # Install yq
     && yq_binary="yq_${TARGETOS}_${TARGETARCH}" \
     && wget --quiet "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/${yq_binary}" --output-document=/usr/bin/yq \
@@ -45,8 +51,8 @@ RUN apt-get update \
     && git config --system --add safe.directory '*' \
     && echo '.pgrubic_cache/' > /etc/gitexclude \
     && git config --system core.excludesFile /etc/gitexclude \
-    && apt-get purge -y --auto-remove wget \
-    && rm -rf /var/lib/apt/lists/*
+    && apk del .download-deps \
+    && rm -f /usr/bin/wget
 
 # Install Python dependencies in an isolated environment.
 COPY pyproject.toml uv.lock /opt/pgpartix-project/
@@ -55,17 +61,20 @@ RUN --mount=type=bind,from=uv,source=/uv,target=/usr/local/bin/uv \
         --project /opt/pgpartix-project --python python3 --no-managed-python \
         --locked --no-dev --no-cache \
     && ln -s /opt/pgpartix/bin/check-jsonschema /usr/local/bin/check-jsonschema \
-    && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic
+    && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic \
+    && rm -rf /opt/pgpartix-project
 
 ENV PATH="/opt/pgpartix/bin:${PATH}"
 
 # Run pgpartix and its disposable PostgreSQL cluster as an unprivileged user.
 ARG PGP_OS_USER=pgpuser
 
-RUN useradd --uid 10001 --home-dir /src --create-home --shell /bin/bash ${PGP_OS_USER} \
+RUN adduser -D -u 10001 -h /src -s /bin/bash ${PGP_OS_USER} \
     && chown -R "${PGP_OS_USER}:${PGP_OS_USER}" /src \
     && mkdir -p /var/lib/pgpartix \
-    && chown -R "${PGP_OS_USER}:${PGP_OS_USER}" /var/lib/pgpartix
+    && chown -R "${PGP_OS_USER}:${PGP_OS_USER}" /var/lib/pgpartix \
+    # pgpartix starts PostgreSQL directly as PGP_OS_USER, without gosu.
+    && rm -f /usr/local/bin/gosu
 
 COPY src/bin/* /usr/local/bin/
 
@@ -81,12 +90,20 @@ CMD ["/bin/bash"]
 
 FROM build AS test
 
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
 ARG BATS_VERSION=1.14.0
 ARG BATS_SHA256=bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177
 
 # Install test dependencies and create the tablespace fixture root.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends kcov wget \
+COPY --from=kcov /usr/local/bin/kcov* /usr/local/bin/
+
+RUN apk add --no-cache \
+        'libcurl~8.23' \
+        'libdw~0.195' \
+        'libstdc++~15.2' \
+        'zlib~1.4' \
+    && apk add --no-cache --virtual .download-deps 'wget~1.25' \
     && wget --quiet \
         "https://github.com/bats-core/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz" \
         --output-document=/tmp/bats-core.tar.gz \
@@ -97,8 +114,8 @@ RUN apt-get update \
     && rm -rf bats-core-${BATS_VERSION} \
     && mkdir -p /var/lib/pgpartix/tablespaces \
     && chown "${PGP_OS_USER}:${PGP_OS_USER}" /var/lib/pgpartix/tablespaces \
-    && apt-get purge -y --auto-remove wget \
-    && rm -rf /var/lib/apt/lists/*
+    && apk del .download-deps \
+    && rm -f /usr/bin/wget
 
 # Test changes should not invalidate the dependency-installation layer.
 COPY --chown=${PGP_OS_USER}:${PGP_OS_USER} tests tests

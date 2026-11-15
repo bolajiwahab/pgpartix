@@ -1,0 +1,25 @@
+---
+format: "sarif"
+output: "trivy-repo-results.sarif"
+severity:
+  - HIGH
+  - CRITICAL
+exit-code: 1
+ignorefile: .trivyignore.yaml
+pkg:
+  include-dev-deps: true
+  types:
+    - os
+    - library
+scan:
+  scanners:
+    - vuln
+    - secret
+  skip-dirs:
+    - .git
+    - .venv
+    - .tox
+    - .pgrubic_cache
+    - coverage
+vulnerability:
+  ignore-unfixed: false

@@ -80,7 +80,7 @@ function create_postgres_stubs() {
     chmod +x "${path_directory}/pg_config"
 
     run env \
-        PATH="${path_directory}:/usr/local/bin:/usr/bin:/bin" \
+        PATH="${path_directory}:/usr/bin:/bin" \
         POSTGRES_BIN_DIR="${stub_directory}" \
         PGDATA="${BATS_TEST_TMPDIR}/data" \
         PGP_INIT_DIR="" \
