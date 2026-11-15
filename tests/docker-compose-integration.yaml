@@ -7,7 +7,12 @@
 # Usage: tests/run-integration-test.sh
 services:
   postgres:
-    image: postgres:${PG_MAJOR_VERSION:-18}
+    # Reuse the digest-pinned PostgreSQL stage so Renovate maintains each pin
+    # in the Dockerfile.
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: postgres${PG_MAJOR_VERSION:-18}
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
