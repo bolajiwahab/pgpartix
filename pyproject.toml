@@ -15,7 +15,7 @@ tooling = [
     "uv==0.13.7",
 ]
 docs = [
-    "zensical==0.1.0",
+    "zensical==0.1.1",
 ]
 
 [tool.uv]
