@@ -6,15 +6,15 @@ FROM kcov/kcov:latest-alpine@sha256:6e6f3f62461100d789ae5b91e0534b65ff1b88f47564
 
 # Pin each supported major to a multi-platform manifest index. BuildKit selects
 # only the stage requested by PG_MAJOR_VERSION; Renovate updates the pins.
-FROM postgres:14-alpine@sha256:0e6cd607ed90b858005f39da5931dad42ff1ea4be37a897ffe325414b0bab029 AS postgres14-alpine
-FROM postgres:15-alpine@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba AS postgres15-alpine
-FROM postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663 AS postgres16-alpine
-FROM postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065 AS postgres17-alpine
-FROM postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95 AS postgres18-alpine
+FROM postgres:14-alpine@sha256:0e6cd607ed90b858005f39da5931dad42ff1ea4be37a897ffe325414b0bab029 AS postgres14
+FROM postgres:15-alpine@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba AS postgres15
+FROM postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663 AS postgres16
+FROM postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065 AS postgres17
+FROM postgres:18-alpine@sha256:1018733457011bf88d81db98cf43aac6d5150afc18787dbe204771fedf80ff95 AS postgres18
 
 # Select one of the digest-pinned stages above.
 # hadolint ignore=DL3006
-FROM postgres${PG_MAJOR_VERSION}-alpine AS build
+FROM postgres${PG_MAJOR_VERSION} AS build
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 

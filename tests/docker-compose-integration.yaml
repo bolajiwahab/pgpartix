@@ -12,7 +12,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      target: postgres${PG_MAJOR_VERSION:-18}-alpine
+      target: postgres${PG_MAJOR_VERSION:-18}
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
