@@ -42,7 +42,7 @@
       "groupSlug": "docker-updates"
     },
     {
-      "description": "Group Python dependencies declared in pyproject.toml",
+      "description": "Group Python dependencies",
       "matchManagers": [
         "pep621"
       ],
