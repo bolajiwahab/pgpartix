@@ -4,7 +4,7 @@ version = "0.0.0"
 requires-python = ">=3.12"
 dependencies = [
     "check-jsonschema==0.39.0",
-    "pgrubic==4.1.0",
+    "pgrubic==4.1.1",
 ]
 
 [dependency-groups]
@@ -12,10 +12,10 @@ dev = [
     "pre-commit==4.7.0",
 ]
 tooling = [
-    "uv==0.13.7",
+    "uv==0.13.8",
 ]
 docs = [
-    "zensical==0.1.0",
+    "zensical==0.1.1",
 ]
 
 [tool.uv]
