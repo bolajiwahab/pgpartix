@@ -13,8 +13,9 @@ bug:
 config:
   - "/(config)/i"
 
+# Performance improvements, such as "perf:", are listed with features.
 enhancement:
-  - '/^(feat(\(.+\))?!?:|\[Feature\])/'
+  - '/^((feat|perf)(\(.+\))?!?:|\[Feature\])/'
 
 ci:
   - '/^(ci|build)(\(.+\))?:/'
