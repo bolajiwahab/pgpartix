@@ -7,7 +7,7 @@ echo "INFO: Setting up mock timestamp"
 printf '%s\n' \
     "mock.now = 'disabled'" \
     "search_path = 'mock, pg_catalog, public'" \
-    >> "${PGDATA}/postgresql.conf"
+    >>"${PGDATA}/postgresql.conf"
 
 pg_ctl reload
 

@@ -19,14 +19,14 @@ EOF
 
 while getopts "h" option; do
     case "${option}" in
-        h)
-            usage
-            exit 0
-            ;;
-        *)
-            usage >&2
-            exit 2
-            ;;
+    h)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
     esac
 done
 
@@ -37,6 +37,6 @@ configure_database_environment
 # Setup infrastructure
 find /src/sql -type f -iname "*.sql" -print0 | sort -z | xargs -0 printf -- ' -f %s' |
     PGOPTIONS='--client_min_messages=warning' xargs \
-    psql --quiet \
+        psql --quiet \
         --variable "ON_ERROR_STOP=1" \
         --single-transaction

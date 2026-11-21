@@ -11,7 +11,7 @@ to bootstrap the development environment. Run these commands from the repository
 1. Create the development environment, including the pinned uv, pre-commit, and documentation tools:
 
     ```console
-    uv sync --locked --group tooling --group docs
+    uv sync --locked --no-build --group tooling --group docs
     ```
 
 2. Activate the development environment:
@@ -107,7 +107,7 @@ To build the documentation site after activating the development environment:
 
 ```bash
 cd docs
-uv run --locked --group tooling --group docs zensical build --clean
+uv run --locked --no-build --group tooling --group docs zensical build --clean
 ```
 
 To preview changes to the documentation, from the parent directory, use:

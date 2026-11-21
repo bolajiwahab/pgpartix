@@ -5,8 +5,7 @@ default_language_version:
 default_install_hook_types: [pre-commit, commit-msg]
 
 repos:
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.0.0
+  - repo: local
     hooks:
       - id: conventional-pre-commit
         name: Lint commit messages
@@ -14,9 +13,6 @@ repos:
         language: python
         stages: [commit-msg]
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
       - id: trailing-whitespace
         stages: [pre-commit]
         name: Trim Trailing Whitespace
@@ -49,40 +45,6 @@ repos:
         types: [yaml]
         args: [--unsafe]
 
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
-      - id: shellcheck
-        name: Lint shell scripts
-        entry: shellcheck
-        language: python
-        types: [shell]
-        stages: [pre-commit]
-
-  - repo: local
-    hooks:
-      - id: hadolint
-        name: Lint Dockerfiles
-        entry: ghcr.io/hadolint/hadolint:v2.15.1 hadolint
-        language: docker_image
-        stages: [pre-commit]
-        types: [dockerfile]
-
-  # Formatters should be run late so that they can re-format
-  # any prior changes
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.11.0-1
-    hooks:
-      - id: shfmt
-        name: Format shell scripts
-        entry: shfmt
-        args: [--indent=4]
-        stages: [pre-commit]
-        types: [shell]
-
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.0
-    hooks:
       - id: yamllint
         stages: [pre-commit]
         name: Lint yaml files
@@ -90,3 +52,46 @@ repos:
         language: python
         types: [yaml]
         args: [--strict]
+
+      - id: shellcheck
+        name: Lint shell scripts
+        entry: shellcheck
+        language: python
+        types: [shell]
+        stages: [pre-commit]
+
+      - id: hadolint
+        name: Lint Dockerfiles
+        entry: >-
+          ghcr.io/hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+          hadolint
+        language: docker_image
+        stages: [pre-commit]
+        types: [dockerfile]
+
+      - id: zizmor
+        stages: [pre-commit]
+        name: Lint GitHub Actions workflows
+        entry: zizmor
+        language: python
+        types: [yaml]
+        # The inputs zizmor supports.
+        files: |
+          (?x)(^|/)(
+            \.github/(workflows/[^/]+|dependabot)\.ya?ml
+            |action\.ya?ml
+            |\.pre-commit-(config|hooks)\.ya?ml
+          )$
+        require_serial: true
+        args: [--no-progress]
+
+  # Formatters should be run late so that they can re-format
+  # any prior changes
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: 5c04180ee080cf187369bcc7fd720c253687386c  # frozen: v3.11.0-1
+    hooks:
+      - id: shfmt-docker
+        name: Format shell scripts
+        args: [--write, --simplify, --indent=4]
+        stages: [pre-commit]
+        types: [shell]
