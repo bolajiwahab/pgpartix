@@ -73,9 +73,9 @@ jobs:
         id: create_release
         env:
           GH_TOKEN: ${{ github.token }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}
           TAG_NAME: ${{ needs.details.outputs.tag_name }}
           TAG_SUFFIX: ${{ needs.details.outputs.suffix }}
-          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}
         run: |
             notes="${RUNNER_TEMP}/notes.md"
             # gh release create --generate-notes puts the generated notes last, so generate them here
@@ -134,14 +134,15 @@ jobs:
         id: image-tags
         env:
           POSTGRESQL: ${{ matrix.postgresql }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}
           TAG_NAME: ${{ needs.details.outputs.tag_name }}
           TAG_SUFFIX: ${{ needs.details.outputs.suffix }}
         run: |
           {
             echo "tags<<EOF"
-            echo "ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:${TAG_NAME}-pg${POSTGRESQL}"
+            echo "${IMAGE}:${TAG_NAME}-pg${POSTGRESQL}"
             if [[ "${POSTGRESQL}" == "${LATEST_POSTGRESQL_VERSION}" && -z "${TAG_SUFFIX}" ]]; then
-              echo "ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:latest"
+              echo "${IMAGE}:latest"
             fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -157,7 +158,9 @@ jobs:
           push: true
           tags: ${{ steps.image-tags.outputs.tags }}
 
-      - name: Post Image URL
+      - name: Post Image Tags
         env:
-          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:${{ needs.details.outputs.tag_name }}-pg${{ matrix.postgresql }}
-        run: echo "Docker image published at ${IMAGE}"
+          TAGS: ${{ steps.image-tags.outputs.tags }}
+        run: |
+          echo "Docker image published at:"
+          echo "${TAGS}"
