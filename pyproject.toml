@@ -1,6 +1,6 @@
 [project]
 name = "pgpartix"
-version = "0.0.0"
+version = "0.16.0"
 requires-python = ">=3.12"
 dependencies = [
     "check-jsonschema==0.39.0",
@@ -17,6 +17,27 @@ tooling = [
 docs = [
     "zensical==0.1.1",
 ]
+release = [
+    "commitizen==4.19.3",
+]
 
 [tool.uv]
 package = false
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+# Matches the release workflow's tags, such as 0.17.0 and 0.17.0rc1.
+version_scheme = "pep440"
+version_provider = "uv"
+# Breaking changes bump the minor version until pgpartix reaches 1.0.0.
+major_version_zero = true
+update_changelog_on_bump = true
+annotated_tag = true
+bump_message = "chore(release): release $new_version"
+breaking_change_exclamation_in_title = true
+# The image tags in the docs, such as ghcr.io/bolajiwahab/pgpartix:0.16.0-pg18.
+version_files = [
+    "docs/docs/getting-started.md:ghcr.io/bolajiwahab/pgpartix",
+    "docs/docs/github-actions.md:ghcr.io/bolajiwahab/pgpartix",
+]
