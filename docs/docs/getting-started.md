@@ -1,6 +1,6 @@
 # Getting started
 
-pgpartix inspects a PostgreSQL database and writes migration files for missing and expired partitions. Review and deploy them through the application's existing migration process; pgpartix does not apply them.
+**pgpartix** inspects a PostgreSQL database and writes migration files for missing and expired partitions. You can then review and deploy them through the application's existing migration process, as pgpartix does not apply them.
 
 ## Requirements
 
@@ -136,7 +136,17 @@ docker run --rm \
   pgp-run-lifecycle -c partition-lifecycle.yaml
 ```
 
-The connection role must be able to inspect the application catalog, creates a dedicated schema `pgpartix` for the helper objects, and create or replace helper objects in the `pgpartix` schema. Prefer a non-production database and restrict network and credential access appropriately.
+pgpartix reads only the system catalogs, so the connection role needs no access to application schemas or tables. It can't be read-only, though, because pgpartix keeps its own objects in a `pgpartix` schema in that database and updates them on every run. The role needs:
+
+- `CREATE` on the database, on every run, not only the first.
+- Ownership of the `pgpartix` schema and everything in it. Let the role create the schema on its first run; if another role created it earlier, drop it (`DROP SCHEMA pgpartix CASCADE`) so the new role recreates it.
+
+```sql
+CREATE ROLE pgpartix_runner LOGIN PASSWORD '...';
+GRANT CREATE ON DATABASE app TO pgpartix_runner;
+```
+
+Prefer a non-production database and restrict network and credential access appropriately.
 
 ## Review the output
 

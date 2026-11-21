@@ -1,12 +1,11 @@
 # pgpartix
 
-![GitHub Release](https://img.shields.io/github/v/release/bolajiwahab/pgpartix)
+[![GitHub Release](https://img.shields.io/github/v/release/bolajiwahab/pgpartix)](https://github.com/bolajiwahab/pgpartix/releases)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%20%7C%2015%20%7C%2016%20%7C%2017%20%7C%2018-4169E1?logo=postgresql&logoColor=white)](https://github.com/bolajiwahab/pgpartix/pkgs/container/pgpartix)
+[![Image tags](https://ghcr-badge.egpl.dev/bolajiwahab/pgpartix/tags?color=%2344cc11&ignore=latest&n=5&label=image+tags&trim=)](https://github.com/bolajiwahab/pgpartix/pkgs/container/pgpartix)
+[![GitHub License](https://img.shields.io/github/license/bolajiwahab/pgpartix)](https://github.com/bolajiwahab/pgpartix/blob/main/LICENSE)
 [![CI](https://github.com/bolajiwahab/pgpartix/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/bolajiwahab/pgpartix/actions/workflows/ci.yaml)
-[![release](https://github.com/bolajiwahab/pgpartix/actions/workflows/release.yaml/badge.svg)](https://github.com/bolajiwahab/pgpartix/actions/workflows/release.yaml)
-![GitHub License](https://img.shields.io/github/license/bolajiwahab/pgpartix)
-![GitHub Container Registry](https://ghcr-badge.egpl.dev/bolajiwahab/pgpartix/tags?color=%2344cc11&ignore=latest&n=5&label=image+tags&trim=)
-[![Trivy](https://img.shields.io/badge/Trivy-Container%20Security-1904DA?logo=trivy&logoColor=white)](https://trivy.dev/)
-[![Hadolint](https://img.shields.io/badge/Hadolint-Dockerfile%20Linting-0D597F?logo=docker&logoColor=white)](https://github.com/hadolint/hadolint)
+[![Trivy Security Scan](https://github.com/bolajiwahab/pgpartix/actions/workflows/trivy.yaml/badge.svg?branch=main)](https://github.com/bolajiwahab/pgpartix/actions/workflows/trivy.yaml)
 
 pgpartix is a PostgreSQL partition-lifecycle migration generator. It inspects a PostgreSQL database and writes migrations for partitions that should be created or expired.
 
@@ -77,9 +76,35 @@ docker run --rm \
   '
 ```
 
-`latest` contains the newest pgpartix release and highest stable PostgreSQL major. For reproducible runs, pin both versions with a tag such as `0.11.0-pg18`. The only database setup input in this example is the initialization directory. It can contain `.sql`, `.sql.gz`, and `.sh` files, including scripts that invoke the application's existing schema or migration tooling. `--workdir /repository` is required because the image otherwise runs from `/src`, while the configuration and output paths are relative to the mounted repository. Generated SQL is written to `examples/quick-start/migrations/pgpartix_output.sql`; apply generated lifecycle migrations only through the application's normal migration process.
+- `latest` contains the newest pgpartix release and highest stable PostgreSQL major.
+- For reproducible runs, pin both versions with a tag such as `ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18`.
+- The only database setup input in this example is the initialization directory. It can contain `.sql`, `.sql.gz`, and `.sh` files, including scripts that invoke the application's existing schema or migration tooling.
+- `--workdir /repository` is required because the image otherwise runs from `/src`, while the configuration and output paths are relative to the mounted repository.
+- Generated SQL is written to `examples/quick-start/migrations/pgpartix_output.sql`; apply generated lifecycle migrations through the application's normal migration process.
 
 See [Getting started](docs/docs/getting-started.md) for prerequisites, external database mode, and output validation.
+
+## GitHub Actions
+
+Call the reusable workflow on a schedule to open or update a pull request with the generated migrations:
+
+```yaml
+jobs:
+  partition-lifecycle:
+    permissions:
+      contents: read
+      packages: read
+    uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@0.16.1
+    with:
+      config: partition-lifecycle.yaml
+      image: "ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18"
+      init_dir: migrations/initdir
+      app_client_id: ${{ vars.PGPARTIX_APP_CLIENT_ID }}
+    secrets:
+      app_private_key: ${{ secrets.PGPARTIX_APP_PRIVATE_KEY }}
+```
+
+See [GitHub Actions automation](docs/docs/github-actions.md#calling-the-reusable-workflow-directly) for the GitHub App setup, the schedule and every input.
 
 ## Included commands
 
@@ -87,8 +112,6 @@ See [Getting started](docs/docs/getting-started.md) for prerequisites, external 
 | --- | --- |
 | `pgp-start` | Start the bundled PostgreSQL cluster and apply schema initialization files. |
 | `pgp-run-lifecycle` | Generate migrations for missing desired partitions, then detach/drop migrations for expired ones. |
-| `pgp-setup-infrastructure` | Install the SQL functions used to inspect and render lifecycle DDL. |
-| `pgp-get-migration-filename` | Resolve migration filename templates. |
 | `pgp-gh-create-pr` | Optionally create or update a GitHub partition-lifecycle PR. |
 
 Use the [CLI reference](docs/docs/cli-reference.md) for syntax and operational behavior.

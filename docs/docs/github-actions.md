@@ -188,7 +188,7 @@ permissions:
 
 jobs:
   partition-lifecycle:
-    uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@main
+    uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@0.16.1
     with:
       config: partition-lifecycle.yaml
       image: "ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18"
@@ -198,7 +198,31 @@ jobs:
       app_private_key: ${{ secrets.PGPARTIX_APP_PRIVATE_KEY }}
 ```
 
-Pin `@main` to a release tag or commit SHA for reproducibility, matching the pinned `image`. See the `inputs`/`secrets` block of [`partition-lifecycle.yaml`](https://github.com/bolajiwahab/pgpartix/blob/main/.github/workflows/partition-lifecycle.yaml) for the full list, including the `db_*` external-database inputs, and `branch`/`title`/`commit_message` for customizing the automation branch and PR.
+The workflow runs the pgpartix commands inside `image`, so use the same pgpartix release for both.
+
+### Inputs
+
+| Input | Required | Default | Description |
+| --- | --- | --- | --- |
+| `config` | Yes | | Path to the lifecycle configuration file or directory, relative to the repository root. |
+| `app_client_id` | Yes | | Client ID of the GitHub App that pushes the branch and opens the pull request. |
+| `image` | No | `ghcr.io/bolajiwahab/pgpartix:latest` | pgpartix image to run the commands in. |
+| `runs_on` | No | `ubuntu-latest` | Runner for the job. |
+| `init_dir` | No | | Initialization directory applied to the ephemeral cluster. |
+| `db_host` | No | | External database host. Leave it empty to use an ephemeral cluster inside the job. |
+| `db_port` | No | `5432` | External database port. |
+| `db_database` | No | `postgres` | External database name. |
+| `db_user` | No | | External database role. |
+| `branch` | No | `partition-lifecycle` | Automation branch. `pgpartix/` is added in front of it. |
+| `title` | No | `chore: partition lifecycle` | Pull request title. |
+| `commit_message` | No | `chore: partition lifecycle` | Commit message for the generated migrations. |
+
+### Secrets
+
+| Secret | Required | Description |
+| --- | --- | --- |
+| `app_private_key` | Yes | Private key of the GitHub App, including the `BEGIN` and `END` lines. |
+| `db_password` | No | External database password. Not needed with the ephemeral cluster. |
 
 ## Why generation uses `continue-on-error`
 
@@ -246,7 +270,7 @@ When an authoritative non-production catalog is already available, use the match
         run: pgp-run-lifecycle -c partition-lifecycle.yaml
 ```
 
-Use a read-only database role where practical. pgpartix installs helper functions into the selected database through `pgp-setup-infrastructure`, so the role must be permitted to create or replace objects in the `pgpartix` schema.
+The database role needs `CREATE` on the database and ownership of the `pgpartix` schema, but no access to application tables. See [Existing external database](getting-started.md#existing-external-database) for why, and how to set it up.
 
 Protect external credentials with environments, network allowlists, short-lived database authentication, or a self-hosted runner inside the appropriate network boundary.
 
