@@ -118,17 +118,20 @@ zensical serve --config-file docs/mkdocs.yml --dev-addr 127.0.0.1:8000
 
 ## Release
 
-To create a release:
+The project uses [commitizen](https://commitizen-tools.github.io/commitizen/) to manage releases. To create a new release, run
 
 ```bash
-git checkout -B Release
-git pull --rebase origin main
-git fetch --tags
-git tag
-
-# using the next available version, create a new tag e.g
-git tag -a 0.7.0 -m "Release 0.7.0"
-
-# push the new tag to trigger the release
-git push origin 0.7.0
+tools/release.sh
 ```
+
+The script switches to the default branch and pulls it, then runs `cz bump` to choose the next version from the commit messages, update the changelog, commit it, and tag the commit. It then pushes the release commit and its tag together, which triggers the release workflow.
+
+The script refuses to run while tracked files have uncommitted changes. Pushing directly to the default branch requires permission to bypass its branch protection.
+
+To see the version, tag, and changelog entry the next release would create from your current checkout, without changing anything, run
+
+```bash
+tools/release_preview.sh
+```
+
+or run the **Release preview** workflow from the Actions tab, which previews the default branch.

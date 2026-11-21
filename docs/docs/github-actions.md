@@ -191,7 +191,7 @@ jobs:
     uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@main
     with:
       config: partition-lifecycle.yaml
-      image: "ghcr.io/bolajiwahab/pgpartix:0.11.0-pg18"
+      image: "ghcr.io/bolajiwahab/pgpartix:0.16.0-pg18"
       init_dir: migrations/initdir
       app_client_id: ${{ vars.PGPARTIX_APP_CLIENT_ID }}
     secrets:
