@@ -15,6 +15,7 @@ permissions: {}
 
 env:
   PACKAGE_NAME: "pgpartix"
+  POSTGRESQL_VERSIONS: "[14, 15, 16, 17, 18]"
   LATEST_POSTGRESQL_VERSION: "18"
 
 jobs:
@@ -27,6 +28,8 @@ jobs:
       new_version: ${{ steps.release.outputs.new_version }}
       suffix: ${{ steps.release.outputs.suffix }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      # strategy cannot read env, so the image matrix reads the versions from here.
+      postgresql_versions: ${{ env.POSTGRESQL_VERSIONS }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -56,6 +59,8 @@ jobs:
     name: Create GitHub Release
     needs: [details]
     runs-on: ubuntu-latest
+    environment:
+      name: release
     permissions:
       contents: write
     steps:
@@ -69,8 +74,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ needs.details.outputs.tag_name }}
+          TAG_SUFFIX: ${{ needs.details.outputs.suffix }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}
         run: |
-            gh release create "${TAG_NAME}" --title "${TAG_NAME}" --generate-notes
+            notes="${RUNNER_TEMP}/notes.md"
+            # gh release create --generate-notes puts the generated notes last, so generate them here
+            # to list the images after them.
+            {
+              gh api --method POST "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+                -f tag_name="${TAG_NAME}" --jq .body
+              echo
+              echo "## Images"
+              echo
+              echo "| PostgreSQL | Image |"
+              echo "| --- | --- |"
+              for postgresql in $(jq -r 'reverse | .[]' <<< "${POSTGRESQL_VERSIONS}"); do
+                images="\`${IMAGE}:${TAG_NAME}-pg${postgresql}\`"
+                if [[ "${postgresql}" == "${LATEST_POSTGRESQL_VERSION}" && -z "${TAG_SUFFIX}" ]]; then
+                  images+=", \`${IMAGE}:latest\`"
+                fi
+                echo "| ${postgresql} | ${images} |"
+              done
+            } > "${notes}"
+            gh release create "${TAG_NAME}" --title "${TAG_NAME}" --notes-file "${notes}"
 
   docker_image_release:
     name: Publish PostgreSQL ${{ matrix.postgresql }} image [arch=amd64,arm64]
@@ -79,12 +105,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        postgresql: [14, 15, 16, 17, 18]
+        postgresql: ${{ fromJSON(needs.details.outputs.postgresql_versions) }}
     permissions:
       contents: read
       packages: write
     environment:
-      name: release
+      name: ghcr
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -108,13 +134,13 @@ jobs:
         id: image-tags
         env:
           POSTGRESQL: ${{ matrix.postgresql }}
-          RELEASE_TAG: ${{ needs.details.outputs.tag_name }}
-          RELEASE_SUFFIX: ${{ needs.details.outputs.suffix }}
+          TAG_NAME: ${{ needs.details.outputs.tag_name }}
+          TAG_SUFFIX: ${{ needs.details.outputs.suffix }}
         run: |
           {
             echo "tags<<EOF"
-            echo "ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:${RELEASE_TAG}-pg${POSTGRESQL}"
-            if [[ "${POSTGRESQL}" == "${LATEST_POSTGRESQL_VERSION}" && -z "${RELEASE_SUFFIX}" ]]; then
+            echo "ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:${TAG_NAME}-pg${POSTGRESQL}"
+            if [[ "${POSTGRESQL}" == "${LATEST_POSTGRESQL_VERSION}" && -z "${TAG_SUFFIX}" ]]; then
               echo "ghcr.io/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}:latest"
             fi
             echo "EOF"
