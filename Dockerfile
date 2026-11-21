@@ -54,12 +54,13 @@ RUN apk add --no-cache \
     && apk del .download-deps \
     && rm -f /usr/bin/wget
 
-# Install Python dependencies in an isolated environment.
+# Install Python dependencies in an isolated environment. PGP_OS_USER cannot
+# write bytecode there, so compile it now rather than on every run.
 COPY pyproject.toml uv.lock /opt/pgpartix-project/
 RUN --mount=type=bind,from=uv,source=/uv,target=/usr/local/bin/uv \
     UV_PROJECT_ENVIRONMENT=/opt/pgpartix uv sync \
         --project /opt/pgpartix-project --python python3 --no-managed-python \
-        --locked --no-build --no-dev --no-cache \
+        --locked --no-build --no-dev --no-cache --compile-bytecode \
     && ln -s /opt/pgpartix/bin/check-jsonschema /usr/local/bin/check-jsonschema \
     && ln -s /opt/pgpartix/bin/pgrubic /usr/local/bin/pgrubic \
     && rm -rf /opt/pgpartix-project
