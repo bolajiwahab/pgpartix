@@ -18,28 +18,28 @@ function create_postgres_stubs() {
 @test "pgp-start shows help" {
     run pgp-start -h
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "Starts the bundled PostgreSQL version" <<< "${output}"
 }
 
 @test "pgp-start rejects unknown options" {
     run pgp-start -z
 
-    [ "${status}" -eq 2 ]
+    [[ "${status}" -eq 2 ]]
     grep -Fq "Starts the bundled PostgreSQL version" <<< "${output}"
 }
 
 @test "pgp-start rejects a missing init directory" {
     run pgp-start -i "${BATS_TEST_TMPDIR}/missing"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "does not exist or is not a directory" <<< "${output}"
 }
 
 @test "pgp-start rejects an initialized data directory" {
     run pgp-start
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "already contains a PostgreSQL cluster" <<< "${output}"
 }
 
@@ -65,9 +65,9 @@ function create_postgres_stubs() {
         SOURCED_MARKER="${sourced_marker}" \
         pgp-start -i "${init_directory}"
 
-    [ "${status}" -eq 0 ]
-    [ -e "${executable_marker}" ]
-    [ -e "${sourced_marker}" ]
+    [[ "${status}" -eq 0 ]]
+    [[ -e "${executable_marker}" ]]
+    [[ -e "${sourced_marker}" ]]
 }
 
 @test "pgp-start finds PostgreSQL binaries through pg_config" {
@@ -86,5 +86,5 @@ function create_postgres_stubs() {
         PGP_INIT_DIR="" \
         /usr/local/bin/pgp-start
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
 }

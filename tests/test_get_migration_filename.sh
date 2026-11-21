@@ -13,8 +13,8 @@ source "${BATS_TEST_DIRNAME}/conftest.sh"
         -d "${BATS_TEST_TMPDIR}" \
         -m 'Add Transactions'
 
-    [ "${status}" -eq 0 ]
-    [ "${output}" = 'V002__add_transactions.sql' ]
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == 'V002__add_transactions.sql' ]]
 }
 
 @test "pgp-get-migration-filename supports unpadded integer templates" {
@@ -25,8 +25,8 @@ source "${BATS_TEST_DIRNAME}/conftest.sh"
         -d "${BATS_TEST_TMPDIR}" \
         -m 'Add Transactions'
 
-    [ "${status}" -eq 0 ]
-    [ "${output}" = 'V2__add_transactions.sql' ]
+    [[ "${status}" -eq 0 ]]
+    [[ "${output}" == 'V2__add_transactions.sql' ]]
 }
 
 @test "pgp-get-migration-filename supports time placeholders" {
@@ -35,27 +35,27 @@ source "${BATS_TEST_DIRNAME}/conftest.sh"
         -d "${BATS_TEST_TMPDIR}" \
         -m 'Add Transactions'
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "_up_add_transactions.sql" <<< "${output}"
 }
 
 @test "pgp-get-migration-filename validates required arguments" {
     run pgp-get-migration-filename -t '{description}.sql'
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "Helper to generate a migration filename." <<< "${output}"
 }
 
 @test "pgp-get-migration-filename shows help" {
     run pgp-get-migration-filename -h
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "Helper to generate a migration filename." <<< "${output}"
 }
 
 @test "pgp-get-migration-filename rejects unknown options" {
     run pgp-get-migration-filename -z
 
-    [ "${status}" -eq 2 ]
+    [[ "${status}" -eq 2 ]]
     grep -Fq "Helper to generate a migration filename." <<< "${output}"
 }

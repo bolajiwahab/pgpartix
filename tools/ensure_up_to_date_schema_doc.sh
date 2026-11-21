@@ -4,7 +4,7 @@
 
 docs/schema_doc_generator.sh
 
-if git diff --quiet -- docs/docs/schema.html && [ -z "$(git ls-files --others --exclude-standard docs/docs/schema.html)" ]; then
+if git diff --quiet -- docs/docs/schema.html && [[ -z "$(git ls-files --others --exclude-standard docs/docs/schema.html)" ]]; then
     echo "Schema documentation is up to date."
     exit 0
 else

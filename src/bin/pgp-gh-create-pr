@@ -57,7 +57,7 @@ set -euo pipefail
 
 cd "${target_dir}"
 
-if git diff --quiet -- && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+if git diff --quiet -- && [[ -z "$(git ls-files --others --exclude-standard)" ]]; then
     echo "INFO: No changes detected. Exiting..."
     exit 0
 fi
