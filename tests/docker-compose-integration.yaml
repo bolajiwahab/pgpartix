@@ -1,8 +1,8 @@
 ---
 # yamllint disable rule:line-length
-# Integration test for an external database: runs pgp-run-lifecycle against a
-# dedicated PostgreSQL container, the way an application's own database would
-# be reached.
+# Integration tests for the runtime image: pgp-run-lifecycle against a dedicated
+# PostgreSQL container, the way an application's own database would be reached,
+# and against an ephemeral cluster started from a container running as root.
 #
 # Usage: tests/run-integration-test.sh
 services:
@@ -26,7 +26,7 @@ services:
       retries: 20
 
   pgpartix:
-    build:
+    build: &runtime-build
       context: ..
       dockerfile: Dockerfile
       target: runtime
@@ -54,3 +54,20 @@ services:
       - -lc
       - |
         pgp-run-lifecycle -c tests/fixtures/external_db/partition-lifecycle.yaml
+
+  # The container runs as root and starts the ephemeral cluster as pgpuser.
+  pgpartix-ephemeral:
+    build: *runtime-build
+    user: root
+    environment:
+      PGP_INIT_DIR: examples/quick-start/initdir
+    volumes:
+      - ..:/repository
+    working_dir: /repository
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        runuser -u pgpuser -- pgp-start
+        pgp-run-lifecycle -c examples/quick-start/partition-lifecycle.yaml

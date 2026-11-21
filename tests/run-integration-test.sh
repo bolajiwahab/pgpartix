@@ -21,8 +21,15 @@ if [[ ${PGP_SKIP_BUILD:-false} != "true" ]]; then
 fi
 
 cleanup
+
+# An external database.
 docker compose -f "${compose_file}" up \
     --force-recreate \
     --abort-on-container-exit \
+    --exit-code-from pgpartix \
     --quiet-pull \
-    --remove-orphans
+    --remove-orphans \
+    postgres pgpartix
+
+# An ephemeral cluster, started from a container running as root.
+docker compose -f "${compose_file}" run --rm pgpartix-ephemeral

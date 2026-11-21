@@ -27,8 +27,8 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 # Keep the disposable cluster under the directory owned by PGP_OS_USER.
 ENV PGDATA="/var/lib/pgpartix/data"
 
-# Install OS dependencies. runuser lets jobs that run the image as root, such as
-# the reusable workflow, start PostgreSQL as PGP_OS_USER.
+# Install OS dependencies. runuser lets a container running as root start
+# PostgreSQL as PGP_OS_USER.
 RUN apk add --no-cache \
         'bash~5.3' \
         'ca-certificates~20261020' \
