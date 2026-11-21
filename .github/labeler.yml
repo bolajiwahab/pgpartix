@@ -1,24 +1,31 @@
 ---
+# Type labels match the conventional commit type at the start of a pull request
+# title, such as "feat:" or "fix(deps):". The release notes are grouped by them.
 chore:
-  - "/(chore)/i"
+  - '/^chore(\(.+\))?:/'
 
 documentation:
   - '/^docs?(\(.+\))?:/'
 
 bug:
-  - "/(bug|fix)/i"
+  - '/^(fix(\(.+\))?:|\[Bug\])/'
 
 config:
   - "/(config)/i"
 
 enhancement:
-  - "/(feat|feature)/i"
+  - '/^(feat(\(.+\))?!?:|\[Feature\])/'
 
 ci:
-  - "/(ci)/i"
+  - '/^(ci|build)(\(.+\))?:/'
 
+# The deps or dependencies scope, such as "fix(deps):" or "chore(dependencies):"
 dependencies:
-  - "/(dependencies)/i"
+  - '/^\w+\((deps|dependencies)\):/'
+
+# A "!" after feat, such as "feat!:" or "feat(cli)!:"
+breaking-change:
+  - '/^feat(\(.+\))?!:/'
 
 question:
   - "/(question)/i"

@@ -1,0 +1,103 @@
+---
+# yamllint disable rule:line-length
+name: Bug report
+description: Report a problem with pgpartix
+title: "[Bug] <short description>"
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please provide as much detail as possible to help us reproduce and fix it.
+
+  - type: checkboxes
+    attributes:
+      label: Search before submitting
+      description: >
+        Before opening a new issue, please search the existing [issues](https://github.com/bolajiwahab/pgpartix/issues)
+        to see if your question or problem has already been reported.
+      options:
+        - label: >
+            I have searched the [issues](https://github.com/bolajiwahab/pgpartix/issues) and confirmed that no similar issue exists.
+          required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behaviour
+      description: Describe what actually happened.
+      placeholder: >
+        Include any error messages, or the migration pgpartix generated.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+      description: Describe what you expected to happen.
+      placeholder: >
+        Provide the output or behaviour you were expecting.
+    validations:
+      required: true
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration to reproduce
+      description: The smallest lifecycle configuration that shows the problem.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: tables
+    attributes:
+      label: Table definitions
+      description: The `CREATE TABLE` statements for the partitioned tables involved, if relevant.
+      render: sql
+
+  - type: input
+    id: command
+    attributes:
+      label: Command or workflow
+      description: What did you run, such as `pgp-run-lifecycle -c partition-lifecycle.yaml` or the reusable partition lifecycle workflow?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Image
+      description: The pgpartix image you used.
+      placeholder: "ghcr.io/bolajiwahab/pgpartix:0.16.0-pg18"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: The PostgreSQL version, and where pgpartix runs, such as GitHub Actions, Docker or Kubernetes.
+      placeholder: "PostgreSQL 18, GitHub Actions"
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Are you willing to work on and submit a PR to address the issue?
+      description: >
+        Submitting a pull request is completely optional, but we welcome and guide new contributors.
+        If you have an idea for a fix and some understanding of how to implement it, we’d love your help.
+      options:
+        - label: Yes, I am willing to submit a PR :)
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Any additional logs or output that might help.
+
+  - type: markdown
+    attributes:
+      value: "Thanks for completing the form!"
