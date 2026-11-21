@@ -9,7 +9,7 @@ kcov \
     --clean \
     --dump-summary \
     --limits=50,100 \
-    --exclude-line="if ! psql,done < <(yq,gunzip -c,body=\$(cat <<EOF,PR_URL=\"\$(gh pr list \\,PR_URL=\"\$(gh pr create \\" \
+    --exclude-line="if ! psql,done < <(yq,gunzip -c,PR_URL=\"\$(gh pr list \\,PR_URL=\"\$(gh pr create \\" \
     --exclude-region='KCOV_EXCL_START:KCOV_EXCL_STOP' \
     --include-pattern=pgp- \
     --include-path=/usr/local/bin/ \
