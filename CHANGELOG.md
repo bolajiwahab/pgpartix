@@ -1,3 +1,9 @@
+## 0.16.2 (2026-11-21)
+
+### Fix
+
+- **docker**: install runuser for jobs that run the image as root (#164)
+
 ## 0.16.1 (2026-11-21)
 
 ### Fix

@@ -37,7 +37,7 @@ docker pull ghcr.io/bolajiwahab/pgpartix:latest
 `latest` contains the newest pgpartix release and highest stable PostgreSQL major. Pin both versions for reproducible runs, for example:
 
 ```bash
-docker pull ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18
+docker pull ghcr.io/bolajiwahab/pgpartix:0.16.2-pg18
 ```
 
 The container starts as an unprivileged user except otherwise overridden with `--user root`, [see](https://docs.docker.com/engine/containers/run/#user).
@@ -132,7 +132,7 @@ docker run --rm \
   --env PGP_HOST="$PGP_HOST" \
   --env PGP_PORT="$PGP_PORT" \
   --env PGP_DATABASE="$PGP_DATABASE" \
-  ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18 \
+  ghcr.io/bolajiwahab/pgpartix:0.16.2-pg18 \
   pgp-run-lifecycle -c partition-lifecycle.yaml
 ```
 

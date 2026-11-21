@@ -685,7 +685,7 @@ wheels = [
 
 [[package]]
 name = "pgpartix"
-version = "0.16.1"
+version = "0.16.2"
 source = { virtual = "." }
 dependencies = [
     { name = "check-jsonschema" },

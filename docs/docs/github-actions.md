@@ -188,10 +188,10 @@ permissions:
 
 jobs:
   partition-lifecycle:
-    uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@0.16.1
+    uses: bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@0.16.2
     with:
       config: partition-lifecycle.yaml
-      image: "ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18"
+      image: "ghcr.io/bolajiwahab/pgpartix:0.16.2-pg18"
       init_dir: migrations/initdir
       app_client_id: ${{ vars.PGPARTIX_APP_CLIENT_ID }}
     secrets:
