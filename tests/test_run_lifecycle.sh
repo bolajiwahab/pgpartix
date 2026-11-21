@@ -108,14 +108,14 @@ function run_config_directory() {
 @test "pgp-run-lifecycle shows help" {
     run pgp-run-lifecycle -h
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "Run the full partition lifecycle" <<< "${output}"
 }
 
 @test "pgp-run-lifecycle rejects unknown options" {
     run pgp-run-lifecycle -z
 
-    [ "${status}" -eq 2 ]
+    [[ "${status}" -eq 2 ]]
     grep -Fq "Run the full partition lifecycle" <<< "${output}"
 }
 
@@ -137,7 +137,7 @@ function run_config_directory() {
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     run ! grep -Fq "file(s) reformatted" <<< "${output}"
     diff -u "${fixture}/config.expected.sql" "${result}"
     rm -f "${result}"
@@ -146,21 +146,21 @@ function run_config_directory() {
 @test "pgp-run-lifecycle rejects a missing config path" {
     run pgp-run-lifecycle -c "${BATS_TEST_TMPDIR}/missing.yaml"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "does not exist" <<< "${output}"
 }
 
 @test "pgp-run-lifecycle rejects invalid config" {
     run pgp-run-lifecycle -c tests/fixtures/run_lifecycle/invalid.yaml
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "is invalid" <<< "${output}"
 }
 
 @test "pgp-run-lifecycle rejects a negative past partition count" {
     run pgp-run-lifecycle -c tests/fixtures/run_lifecycle/negative_past.yaml
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "is invalid" <<< "${output}"
     grep -Fq "past" <<< "${output}"
 }
@@ -168,7 +168,7 @@ function run_config_directory() {
 @test "pgp-run-lifecycle rejects a negative future partition count" {
     run pgp-run-lifecycle -c tests/fixtures/run_lifecycle/negative_future.yaml
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "is invalid" <<< "${output}"
     grep -Fq "future" <<< "${output}"
 }
@@ -181,10 +181,10 @@ function run_config_directory() {
     run pgp-run-lifecycle -c "${fixture}/missing_name_template.yaml"
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "making partitions failed for 1 table(s)" <<< "${output}"
     grep -Fq "partition name template is required when partition interval is specified" <<< "${output}"
-    [ ! -e "${result}" ]
+    [[ ! -e "${result}" ]]
 }
 
 @test "pgp-run-lifecycle skips generation when no partition interval is configured" {
@@ -195,9 +195,9 @@ function run_config_directory() {
     run pgp-run-lifecycle -c "${fixture}/missing_interval.yaml"
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "No partitions made for test.transactions" <<< "${output}"
-    [ ! -e "${result}" ]
+    [[ ! -e "${result}" ]]
 }
 
 @test "pgp-run-lifecycle rejects a missing template table" {
@@ -207,7 +207,7 @@ function run_config_directory() {
     run pgp-run-lifecycle -c "${fixture}/missing_template_table.yaml"
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "Template table test.missing_template does not exist" <<< "${output}"
 }
 
@@ -217,13 +217,13 @@ function run_config_directory() {
 
     run pgp-run-lifecycle -c "${fixture}/missing_parent_table.yaml"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     # The missing table is invalid input to both phases, so both report it.
     grep -Fq "making partitions failed for 1 table(s)" <<< "${output}"
     grep -Fq "expiring partitions failed for 1 table(s)" <<< "${output}"
     grep -Fq 'table "test"."missing_parent" does not exist' <<< "${output}"
     run ! grep -Fq "Traceback" <<< "${output}"
-    [ ! -e "${result}" ]
+    [[ ! -e "${result}" ]]
 }
 
 @test "pgp-run-lifecycle reports SQL validation failures through the CLI" {
@@ -238,7 +238,7 @@ function run_config_directory() {
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "making partitions failed for 8 table(s)" <<< "${output}"
     grep -Fq 'is not partitioned' <<< "${output}"
     grep -Fq '"LIST" partitioning is not supported' <<< "${output}"
@@ -268,12 +268,12 @@ function run_config_directory() {
 
     run env PATH="${fake_bin}:${PATH}" pgp-run-lifecycle -c "${fixture}/config.yaml"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "WARNING: failed to format generated SQL" <<< "${output}"
     grep -Fq "formatter internals" <<< "${output}"
     run ! grep -Fq "failed for" <<< "${output}"
     run ! grep -Fq "Traceback" <<< "${output}"
-    [ -s "${result}" ]
+    [[ -s "${result}" ]]
 
     # The unformatted SQL must still be valid and applicable.
     createdb --template="${PGP_DATABASE}" pgpartix_test_$$
@@ -300,12 +300,12 @@ function run_config_directory() {
 
     run env PATH="${fake_bin}:${PATH}" pgp-run-lifecycle -c "${fixture}/config.yaml"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "WARNING: failed to format generated SQL" <<< "${output}"
     grep -Fq "formatter internals" <<< "${output}"
     run ! grep -Fq "failed for" <<< "${output}"
     run ! grep -Fq "Traceback" <<< "${output}"
-    [ -s "${result}" ]
+    [[ -s "${result}" ]]
 
     # The unformatted SQL must still be valid and applicable.
     createdb --template="${PGP_DATABASE}" pgpartix_test_$$
@@ -322,7 +322,7 @@ function run_config_directory() {
 
     run run_config_directory "${fixture}"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "Applied configs from ${fixture}/configs" <<< "${output}"
 }
 
@@ -366,8 +366,8 @@ function run_config_directory() {
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${run_status}" -eq 0 ]
-    [ ! -e "${result}" ]
+    [[ "${run_status}" -eq 0 ]]
+    [[ ! -e "${result}" ]]
 }
 
 @test "pgp-run-lifecycle handles an empty expire result" {
@@ -383,8 +383,8 @@ function run_config_directory() {
 
     cleanup "${fixture}/teardown.sql" "" "${result}"
 
-    [ "${run_status}" -eq 0 ]
-    [ ! -e "${result}" ]
+    [[ "${run_status}" -eq 0 ]]
+    [[ ! -e "${result}" ]]
 }
 
 @test "pgp-run-lifecycle reports timestamp and template lookup errors" {
@@ -429,8 +429,8 @@ EOF
 
         psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-        [ -e "${marker}" ]
-        [ "${status}" -eq 1 ]
+        [[ -e "${marker}" ]]
+        [[ "${status}" -eq 1 ]]
         grep -Fq "making partitions failed for 1 table(s)" <<< "${output}"
         grep -Fq "${expected}" <<< "${output}"
     done
@@ -447,7 +447,7 @@ EOF
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     # Neither table exists as a valid partitioned parent, which the make phase
     # checks before ever looking at partition.interval, so both fail there too.
     grep -Fq "making partitions failed for 2 table(s)" <<< "${output}"
@@ -469,7 +469,7 @@ EOF
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "expiring partitions failed for 2 table(s)" <<< "${output}"
     grep -Fq 'table "test"."missing_notifications" does not exist' <<< "${output}"
     grep -Fq 'table "test"."notifications" is not partitioned' <<< "${output}"
@@ -490,7 +490,7 @@ EOF
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
     rm -f "${result}"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "INFO: Using current timestamp for partition start timestamp" <<< "${output}"
 }
 
@@ -506,7 +506,7 @@ EOF
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
     rm -f "${result}"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "already has partitions; using the latest partition's upper bound" <<< "${output}"
 }
 
@@ -522,7 +522,7 @@ EOF
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
     rm -f "${result}"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "INFO: No existing partition for table test.transactions; using the provided start timestamp (2025-03-01T00:00:00+00:00)" <<< "${output}"
 }
 
@@ -538,7 +538,7 @@ EOF
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
     rm -f "${result}"
 
-    [ "${status}" -eq 0 ]
+    [[ "${status}" -eq 0 ]]
     grep -Fq "already has partitions; using the latest partition's upper bound (2025-04-01 00:00:00+00) instead of 2025-03-01T00:00:00+00:00" <<< "${output}"
 }
 
@@ -553,9 +553,9 @@ EOF
 
     psql --no-psqlrc --quiet --variable ON_ERROR_STOP=1 --file "${fixture}/teardown.sql"
 
-    [ "${status}" -eq 1 ]
+    [[ "${status}" -eq 1 ]]
     grep -Fq "No latest partition exists for table test.transactions" <<< "${output}"
-    [ ! -e "${result}" ]
+    [[ ! -e "${result}" ]]
 }
 
 for fixture in tests/fixtures/make_partitions/**/*.{yaml,yml}; do
