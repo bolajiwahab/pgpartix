@@ -1,0 +1,8 @@
+---
+# yamllint disable rule:line-length
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📖 Documentation
+    url: https://pgpartix.azellar.com
+    about: Read the guides and the configuration reference before opening an issue.
