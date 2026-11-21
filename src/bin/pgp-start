@@ -3,8 +3,7 @@
 # shellcheck source=src/bin/pgp-shell-helpers
 source "$(dirname "${BASH_SOURCE[0]}")/pgp-shell-helpers"
 
-usage()
-{
+usage() {
     cat <<EOF
     ${0##*/}
 
@@ -21,23 +20,23 @@ EOF
 
 while getopts "i:h" option; do
     case "${option}" in
-        i)
-            init_dir="${OPTARG}"
-            ;;
-        h)
-            usage
-            exit 0
-            ;;
-        *)
-            usage >&2
-            exit 2
-            ;;
+    i)
+        init_dir="${OPTARG}"
+        ;;
+    h)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
     esac
 done
 
 set -euo pipefail
 
-if ! command -v initdb > /dev/null; then
+if ! command -v initdb >/dev/null; then
     postgres_bin_dir="$(pg_config --bindir)"
     export PATH="${postgres_bin_dir}:${PATH}"
 fi
@@ -46,7 +45,7 @@ configure_database_environment
 
 init_dir=${init_dir:-${PGP_INIT_DIR:-}}
 
-if [[ -n "${init_dir}" && ! -d "${init_dir}" ]]; then
+if [[ -n ${init_dir} && ! -d ${init_dir} ]]; then
     echo "ERROR: The provided init directory '${init_dir}' does not exist or is not a directory." >&2
     exit 1
 fi
@@ -73,44 +72,44 @@ pg_ctl \
 
 # KCOV_EXCL_STOP
 
-if [[ -d "${init_dir}" ]]; then
+if [[ -d ${init_dir} ]]; then
     echo "INFO: Applying init scripts from ${init_dir}"
 
     find -L "${init_dir}" -type f \
-        \( -iname "*.sh" -o -iname "*.sql" -o -iname "*.sql.gz" \) \
-        | sort -V \
-        | while IFS= read -r file; do
+        \( -iname "*.sh" -o -iname "*.sql" -o -iname "*.sql.gz" \) |
+        sort -V |
+        while IFS= read -r file; do
             case "${file}" in
-                *.sh)
-                    if [[ -x "${file}" ]]; then
-                        "${file}"
-                    else
-                        # shellcheck source=/dev/null
-                        . "${file}"
-                    fi
-                    ;;
-                *.sql)
-                    # KCOV_EXCL_START
+            *.sh)
+                if [[ -x ${file} ]]; then
+                    "${file}"
+                else
+                    # shellcheck source=/dev/null
+                    . "${file}"
+                fi
+                ;;
+            *.sql)
+                # KCOV_EXCL_START
+                psql \
+                    --username=postgres \
+                    --dbname=postgres \
+                    --variable "ON_ERROR_STOP=1" \
+                    --quiet \
+                    --no-psqlrc \
+                    -f "${file}"
+                # KCOV_EXCL_STOP
+                ;;
+            *.sql.gz)
+                # KCOV_EXCL_START
+                gunzip -c "${file}" |
                     psql \
                         --username=postgres \
                         --dbname=postgres \
                         --variable "ON_ERROR_STOP=1" \
                         --quiet \
-                        --no-psqlrc \
-                        -f "${file}"
-                    # KCOV_EXCL_STOP
-                    ;;
-                *.sql.gz)
-                    # KCOV_EXCL_START
-                    gunzip -c "${file}" |
-                        psql \
-                            --username=postgres \
-                            --dbname=postgres \
-                            --variable "ON_ERROR_STOP=1" \
-                            --quiet \
-                            --no-psqlrc
-                    # KCOV_EXCL_STOP
-                    ;;
+                        --no-psqlrc
+                # KCOV_EXCL_STOP
+                ;;
             esac
         done
 

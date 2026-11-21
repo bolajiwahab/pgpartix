@@ -3,7 +3,7 @@ chore:
   - "/(chore)/i"
 
 documentation:
-  - "/(documentation|doc)/i"
+  - '/^docs?(\(.+\))?:/'
 
 bug:
   - "/(bug|fix)/i"

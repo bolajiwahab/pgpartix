@@ -70,13 +70,15 @@ on:
         description: External database password. Required only when not using the ephemeral cluster.
         required: false
 
-permissions:
-  contents: read
-  packages: read
+# Each job should declare the permissions it needs.
+permissions: {}
 
 jobs:
   partition-lifecycle:
     runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+      packages: read
     timeout-minutes: 30
 
     # Do not let two runs (e.g. a schedule and a manual dispatch) rewrite the
@@ -86,7 +88,8 @@ jobs:
       cancel-in-progress: false
 
     container:
-      image: ${{ inputs.image }}
+      # The caller chooses the image, and can pin it by digest.
+      image: ${{ inputs.image }}  # zizmor: ignore[unpinned-images]
       # The image runs as an unprivileged user by default. GitHub requires Docker
       # actions to be run by the default Docker user (root) in order to be able to access
       # the GITHUB_WORKSPACE directory which is needed by the workflow.
@@ -105,7 +108,7 @@ jobs:
     steps:
       - name: Create partition-lifecycle App token
         id: app-token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510  # v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510  # v3.3.0
         with:
           client-id: ${{ inputs.app_client_id }}
           private-key: ${{ secrets.app_private_key }}
@@ -115,14 +118,18 @@ jobs:
 
       - name: Get App User ID
         id: get-user-id
-        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        run: echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
 
       - name: Check out repository as the App
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
+          # pgp-gh-create-pr pushes the branch with these credentials. Nothing in
+          # this job uploads the checkout as an artifact.
+          persist-credentials: true
 
       - name: Start PostgreSQL and load the application schema
         id: start
@@ -135,19 +142,26 @@ jobs:
       - name: Run partition lifecycle
         id: lifecycle
         continue-on-error: true
-        run: pgp-run-lifecycle -c "${{ inputs.config }}"
+        env:
+          CONFIG: ${{ inputs.config }}
+        run: pgp-run-lifecycle -c "${CONFIG}"
 
       - name: Create or update partition-lifecycle PR
         if: ${{ steps.lifecycle.outcome == 'success' || steps.lifecycle.outcome == 'failure' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ inputs.branch }}
+          TITLE: ${{ inputs.title }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          USER_ID: ${{ steps.get-user-id.outputs.user-id }}
         run: |
           pgp-gh-create-pr \
-            -b "${{ inputs.branch }}" \
-            -t "${{ inputs.title }}" \
-            -m "${{ inputs.commit_message }}" \
-            -n "${{ steps.app-token.outputs.app-slug }}[bot]" \
-            -e "${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+            -b "${BRANCH}" \
+            -t "${TITLE}" \
+            -m "${COMMIT_MESSAGE}" \
+            -n "${APP_SLUG}[bot]" \
+            -e "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
 
       # Mark the workflow as failed when one or more tables failed,
       # even if valid migrations were still proposed in the PR.

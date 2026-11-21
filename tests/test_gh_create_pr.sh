@@ -15,7 +15,7 @@ function init_repo() {
         git init --quiet
         git config user.email "test@example.com"
         git config user.name "test"
-        echo "content" > README.md
+        echo "content" >README.md
         git add README.md
         git commit --quiet -m "init"
     )
@@ -33,7 +33,7 @@ function init_repo_with_origin() {
         cd "${repo}" || exit 1
         git config user.email "test@example.com"
         git config user.name "test"
-        echo "content" > README.md
+        echo "content" >README.md
         git add README.md
         git commit --quiet -m "init"
         git push --quiet origin HEAD
@@ -47,7 +47,7 @@ function install_fake_gh() {
     local fake_bin="$1"
 
     mkdir -p "${fake_bin}"
-    cat > "${fake_bin}/gh" <<'MOCK'
+    cat >"${fake_bin}/gh" <<'MOCK'
 #!/bin/bash
 printf '%s\n' "$*" >> "${GH_MOCK_LOG}"
 case "$1 $2" in
@@ -77,15 +77,15 @@ function run_gh_create_pr_in() {
 @test "pgp-gh-create-pr shows help" {
     run pgp-gh-create-pr -h
 
-    [[ "${status}" -eq 0 ]]
-    grep -Fq "Creates or updates a pull request on github." <<< "${output}"
+    [[ ${status} -eq 0 ]]
+    grep -Fq "Creates or updates a pull request on github." <<<"${output}"
 }
 
 @test "pgp-gh-create-pr rejects unknown options" {
     run pgp-gh-create-pr -z
 
-    [[ "${status}" -eq 2 ]]
-    grep -Fq "Creates or updates a pull request on github." <<< "${output}"
+    [[ ${status} -eq 2 ]]
+    grep -Fq "Creates or updates a pull request on github." <<<"${output}"
 }
 
 @test "pgp-gh-create-pr fails when no git committer identity is configured" {
@@ -95,12 +95,12 @@ function run_gh_create_pr_in() {
     init_repo_with_origin "${origin}" "${repo}"
     git -C "${repo}" config --unset user.email
     git -C "${repo}" config --unset user.name
-    echo "new migration" > "${repo}/new_migration.sql"
+    echo "new migration" >"${repo}/new_migration.sql"
 
     run_gh_create_pr_in "${repo}"
 
-    [[ "${status}" -ne 0 ]]
-    grep -Fq "ERROR: Git committer identity is not configured." <<< "${output}"
+    [[ ${status} -ne 0 ]]
+    grep -Fq "ERROR: Git committer identity is not configured." <<<"${output}"
 }
 
 @test "pgp-gh-create-pr reports no changes for a clean repository" {
@@ -109,34 +109,34 @@ function run_gh_create_pr_in() {
 
     run_gh_create_pr_in "${repo}"
 
-    [[ "${status}" -eq 0 ]]
-    grep -Fq "No changes detected" <<< "${output}"
+    [[ ${status} -eq 0 ]]
+    grep -Fq "No changes detected" <<<"${output}"
 }
 
 @test "pgp-gh-create-pr ignores an untracked .pgrubic_cache directory" {
     local repo="${BATS_TEST_TMPDIR}/repo"
     init_repo "${repo}"
     mkdir -p "${repo}/.pgrubic_cache/1.3.0"
-    echo "cache" > "${repo}/.pgrubic_cache/1.3.0/some_rule.json"
+    echo "cache" >"${repo}/.pgrubic_cache/1.3.0/some_rule.json"
 
     run_gh_create_pr_in "${repo}"
 
-    [[ "${status}" -eq 0 ]]
-    grep -Fq "No changes detected" <<< "${output}"
+    [[ ${status} -eq 0 ]]
+    grep -Fq "No changes detected" <<<"${output}"
 }
 
 @test "pgp-gh-create-pr detects a real untracked file as a change" {
     local repo="${BATS_TEST_TMPDIR}/repo"
     init_repo "${repo}"
-    echo "new" > "${repo}/new_migration.sql"
+    echo "new" >"${repo}/new_migration.sql"
 
     # No origin remote is configured, so the run cannot proceed to push or
     # create a PR. This only proves the untracked file was not mistaken for
     # "no changes" the way .pgrubic_cache is.
     run_gh_create_pr_in "${repo}"
 
-    [[ "${status}" -ne 0 ]]
-    run ! grep -Fq "No changes detected" <<< "${output}"
+    [[ ${status} -ne 0 ]]
+    run ! grep -Fq "No changes detected" <<<"${output}"
 }
 
 @test "pgp-gh-create-pr creates a PR when none exists" {
@@ -148,7 +148,7 @@ function run_gh_create_pr_in() {
     init_repo_with_origin "${origin}" "${repo}"
     install_fake_gh "${fake_bin}"
     touch /src/partition_lifecycle.log
-    echo "new migration" > "${repo}/new_migration.sql"
+    echo "new migration" >"${repo}/new_migration.sql"
 
     export PATH="${fake_bin}:${PATH}"
     export GH_MOCK_LOG="${gh_log}"
@@ -156,9 +156,9 @@ function run_gh_create_pr_in() {
 
     run_gh_create_pr_in "${repo}"
 
-    [[ "${status}" -eq 0 ]]
-    grep -Fq "INFO: Creating PR..." <<< "${output}"
-    grep -Fq "INFO: PR #1 created: https://github.example/owner/repo/pull/1" <<< "${output}"
+    [[ ${status} -eq 0 ]]
+    grep -Fq "INFO: Creating PR..." <<<"${output}"
+    grep -Fq "INFO: PR #1 created: https://github.example/owner/repo/pull/1" <<<"${output}"
     grep -Fq "pr create" "${gh_log}"
     run ! grep -Fq "pr edit" "${gh_log}"
     git -C "${origin}" branch --list "pgpartix/partition-lifecycle" | grep -Fq "pgpartix/partition-lifecycle"
@@ -173,7 +173,7 @@ function run_gh_create_pr_in() {
     init_repo_with_origin "${origin}" "${repo}"
     install_fake_gh "${fake_bin}"
     touch /src/partition_lifecycle.log
-    echo "another migration" > "${repo}/another_migration.sql"
+    echo "another migration" >"${repo}/another_migration.sql"
 
     export PATH="${fake_bin}:${PATH}"
     export GH_MOCK_LOG="${gh_log}"
@@ -182,9 +182,9 @@ function run_gh_create_pr_in() {
     run_gh_create_pr_in "${repo}" -b other-branch -t "custom title" -m "custom commit" \
         -n "custom-bot[bot]" -e "custom-bot[bot]@users.noreply.github.com"
 
-    [[ "${status}" -eq 0 ]]
-    grep -Fq "INFO: PR already exists: https://github.example/owner/repo/pull/1" <<< "${output}"
-    grep -Fq "INFO: Editing the body of https://github.example/owner/repo/pull/1" <<< "${output}"
+    [[ ${status} -eq 0 ]]
+    grep -Fq "INFO: PR already exists: https://github.example/owner/repo/pull/1" <<<"${output}"
+    grep -Fq "INFO: Editing the body of https://github.example/owner/repo/pull/1" <<<"${output}"
     grep -Fq "pr edit https://github.example/owner/repo/pull/1" "${gh_log}"
     run ! grep -Fq "pr create" "${gh_log}"
     git -C "${origin}" branch --list "pgpartix/other-branch" | grep -Fq "pgpartix/other-branch"

@@ -14,10 +14,8 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: read
-  security-events: write
+# Each job should declare the permissions it needs.
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,9 +35,14 @@ jobs:
   trivy-repo-scan:
     name: Trivy Repository Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Uploads the SARIF report to code scanning.
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Scan repository vulnerabilities and secrets with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
@@ -56,14 +59,14 @@ jobs:
         if: ${{ always() && hashFiles(format('{0}.{1}', env.TRIVY_REPO_REPORT, env.TRIVY_REPORT_FORMAT)) != '' }}
         # Retain the report below when Code Scanning is unavailable.
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4.39.3
         with:
           sarif_file: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
           category: trivy-repo
 
       - name: Retain repository SARIF report
         if: ${{ always() && hashFiles(format('{0}.{1}', env.TRIVY_REPO_REPORT, env.TRIVY_REPORT_FORMAT)) != '' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: ${{ env.TRIVY_REPO_REPORT }}
           path: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
@@ -72,19 +75,24 @@ jobs:
   trivy-image-scan:
     name: Trivy Image Scan (PostgreSQL ${{ matrix.postgresql }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Uploads the SARIF report to code scanning.
     strategy:
       fail-fast: false
       matrix:
         postgresql: [14, 15, 16, 17, 18]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
 
       - name: Build image for scanning
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
         with:
           context: .
           file: Dockerfile
@@ -113,14 +121,14 @@ jobs:
         if: ${{ always() && hashFiles(format('{0}-pg{1}.{2}', env.TRIVY_IMAGE_REPORT, matrix.postgresql, env.TRIVY_REPORT_FORMAT)) != '' }}
         # Retain the report below when Code Scanning is unavailable.
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4.39.3
         with:
           sarif_file: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}
           category: trivy-image-pg${{ matrix.postgresql }}
 
       - name: Retain image SARIF report
         if: ${{ always() && hashFiles(format('{0}-pg{1}.{2}', env.TRIVY_IMAGE_REPORT, matrix.postgresql, env.TRIVY_REPORT_FORMAT)) != '' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}
           path: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}

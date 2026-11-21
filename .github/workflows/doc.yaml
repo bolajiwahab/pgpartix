@@ -11,44 +11,44 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+b[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+rc[0-9]+"
 
-env:
-  DEFAULT_PYTHON_VERSION: 3.12
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+# Each job should declare the permissions it needs.
+permissions: {}
 
 jobs:
   deploy:
     environment:
       name: github-pages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write  # Deploys the documentation site.
+      id-token: write  # Verifies the deployment to GitHub Pages.
     steps:
       - name: Configure Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
 
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
           version: "0.13.8"
 
       - name: Install dependencies
-        run: uv sync --locked --only-group tooling --only-group docs
+        run: uv sync --locked --no-build --only-group tooling --only-group docs
 
       - name: Build site
         working-directory: docs
-        run: uv run --locked --only-group tooling --only-group docs zensical build --clean
+        run: uv run --locked --no-build --only-group tooling --only-group docs zensical build --clean
 
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:
           path: docs/site
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1
         id: deployment

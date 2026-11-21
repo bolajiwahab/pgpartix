@@ -12,8 +12,8 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-if [[ "${PGP_SKIP_BUILD:-false}" != "true" ]]; then
-    if [[ "${PGP_NO_CACHE:-false}" == "true" ]]; then
+if [[ ${PGP_SKIP_BUILD:-false} != "true" ]]; then
+    if [[ ${PGP_NO_CACHE:-false} == "true" ]]; then
         docker compose -f "${compose_file}" build --no-cache
     else
         docker compose -f "${compose_file}" build

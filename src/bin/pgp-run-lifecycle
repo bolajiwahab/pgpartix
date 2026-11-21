@@ -24,17 +24,17 @@ EOF
 
 while getopts "c:h" option; do
     case "${option}" in
-        c)
-            config_path="${OPTARG}"
-            ;;
-        h)
-            usage
-            exit 0
-            ;;
-        *)
-            usage >&2
-            exit 2
-            ;;
+    c)
+        config_path="${OPTARG}"
+        ;;
+    h)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
     esac
 done
 
@@ -42,7 +42,7 @@ configure_database_environment
 
 config_path="${config_path:-.}"
 
-if [[ ! -e "${config_path}" ]]; then
+if [[ ! -e ${config_path} ]]; then
     echo "The provided config path '${config_path}' does not exist" >&2
     exit 1
 fi
@@ -92,28 +92,28 @@ function make_partitions() {
     local config="$1"
 
     while read -r table; do
-        table_schema="$(yq '.schema' <<< "${table}")"
-        table_name="$(yq '.name' <<< "${table}")"
+        table_schema="$(yq '.schema' <<<"${table}")"
+        table_name="$(yq '.name' <<<"${table}")"
 
-        output_file_template="$(yq '.output.file.naming.template // strenv(GLOBAL_OUTPUT_FILE_TEMPLATE)' <<< "${table}")"
+        output_file_template="$(yq '.output.file.naming.template // strenv(GLOBAL_OUTPUT_FILE_TEMPLATE)' <<<"${table}")"
 
-        description="$(yq '.description.make // strenv(GLOBAL_DESCRIPTION_MAKE)' <<< "${table}")"
+        description="$(yq '.description.make // strenv(GLOBAL_DESCRIPTION_MAKE)' <<<"${table}")"
         # Replace parent_table_schema and parent_table_name placeholders in the description.
         description="${description//\{parent_table_schema\}/$table_schema}"
         description="${description//\{parent_table_name\}/$table_name}"
 
-        partition_interval="$(yq '.partition.interval // strenv(GLOBAL_INTERVAL)' <<< "${table}")"
-        partition_name_template="$(yq '.partition.naming.template // strenv(GLOBAL_PARTITION_NAME_TEMPLATE)' <<< "${table}")"
+        partition_interval="$(yq '.partition.interval // strenv(GLOBAL_INTERVAL)' <<<"${table}")"
+        partition_name_template="$(yq '.partition.naming.template // strenv(GLOBAL_PARTITION_NAME_TEMPLATE)' <<<"${table}")"
 
         # Fail before touching the database when the combination is already known to be invalid.
-        if [[ "${partition_interval}" != "null" && "${partition_name_template}" == "null" ]]; then
+        if [[ ${partition_interval} != "null" && ${partition_name_template} == "null" ]]; then
             make_failed_tables["${table_schema}.${table_name}"]="partition name template is required when partition interval is specified"
             continue
         fi
 
-        partition_tablespace="$(yq '.partition.tablespace // strenv(GLOBAL_PARTITION_TABLESPACE)' <<< "${table}")"
-        index_name_template="$(yq '.partition.index.naming.template // strenv(GLOBAL_INDEX_NAME_TEMPLATE)' <<< "${table}")"
-        index_tablespace="$(yq '.partition.index.tablespace // strenv(GLOBAL_INDEX_TABLESPACE)' <<< "${table}")"
+        partition_tablespace="$(yq '.partition.tablespace // strenv(GLOBAL_PARTITION_TABLESPACE)' <<<"${table}")"
+        index_name_template="$(yq '.partition.index.naming.template // strenv(GLOBAL_INDEX_NAME_TEMPLATE)' <<<"${table}")"
+        index_tablespace="$(yq '.partition.index.tablespace // strenv(GLOBAL_INDEX_TABLESPACE)' <<<"${table}")"
         constraint_name_templates="$(
             yq -o=json '
                 {
@@ -124,54 +124,54 @@ function make_partitions() {
                     "check": .partition.constraint.naming.check.template // .partition.constraint.naming.template // strenv(GLOBAL_CHECK_CONSTRAINT_NAME_TEMPLATE),
                     "exclusion": .partition.constraint.naming.exclusion.template // .partition.constraint.naming.template // strenv(GLOBAL_EXCLUSION_CONSTRAINT_NAME_TEMPLATE)
                 }
-            ' <<< "${table}"
+            ' <<<"${table}"
         )"
 
-        trigger_name_template="$(yq '.partition.trigger.naming.template // strenv(GLOBAL_TRIGGER_NAME_TEMPLATE)' <<< "${table}")"
+        trigger_name_template="$(yq '.partition.trigger.naming.template // strenv(GLOBAL_TRIGGER_NAME_TEMPLATE)' <<<"${table}")"
 
-        past_partitions="$(yq '.partition.past // strenv(GLOBAL_PAST)' <<< "${table}")"
-        future_partitions="$(yq '.partition.future // strenv(GLOBAL_FUTURE)' <<< "${table}")"
-        retention="$(yq '.partition.retention.interval // strenv(GLOBAL_RETENTION)' <<< "${table}")"
+        past_partitions="$(yq '.partition.past // strenv(GLOBAL_PAST)' <<<"${table}")"
+        future_partitions="$(yq '.partition.future // strenv(GLOBAL_FUTURE)' <<<"${table}")"
+        retention="$(yq '.partition.retention.interval // strenv(GLOBAL_RETENTION)' <<<"${table}")"
 
         # Because yq default value operator is used to provide alternative (or default) values
         # when a particular expression is either null or false, we cannot use it here as it would
         # instead override partition level boolean values such as true, instead we override them if they are not set.
-        skip_overlapping="$(yq '.partition.skip_overlapping' <<< "${table}")"
-        if [[ "${skip_overlapping}" == "null" ]]; then
+        skip_overlapping="$(yq '.partition.skip_overlapping' <<<"${table}")"
+        if [[ ${skip_overlapping} == "null" ]]; then
             skip_overlapping="${GLOBAL_SKIP_OVERLAPPING}"
         fi
 
-        idempotent="$(yq '.idempotent' <<< "${table}")"
-        if [[ "${idempotent}" == "null" ]]; then
+        idempotent="$(yq '.idempotent' <<<"${table}")"
+        if [[ ${idempotent} == "null" ]]; then
             idempotent="${GLOBAL_IDEMPOTENT}"
         fi
 
-        create_default_partition="$(yq '.partition.default.create' <<< "${table}")"
-        if [[ "${create_default_partition}" == "null" ]]; then
+        create_default_partition="$(yq '.partition.default.create' <<<"${table}")"
+        if [[ ${create_default_partition} == "null" ]]; then
             create_default_partition="${GLOBAL_CREATE_DEFAULT_PARTITION}"
         fi
 
-        default_partition_name_template="$(yq '.partition.default.naming.template // strenv(GLOBAL_DEFAULT_PARTITION_NAME_TEMPLATE)' <<< "${table}")"
+        default_partition_name_template="$(yq '.partition.default.naming.template // strenv(GLOBAL_DEFAULT_PARTITION_NAME_TEMPLATE)' <<<"${table}")"
 
-        partition_storage_mode="$(yq '.partition.storage.mode // strenv(GLOBAL_PARTITION_STORAGE_MODE)' <<< "${table}")"
-        partition_storage_parameters="$(yq -o=json '.partition.storage.parameters // (strenv(GLOBAL_PARTITION_STORAGE_PARAMETERS) | fromjson)' <<< "${table}")"
+        partition_storage_mode="$(yq '.partition.storage.mode // strenv(GLOBAL_PARTITION_STORAGE_MODE)' <<<"${table}")"
+        partition_storage_parameters="$(yq -o=json '.partition.storage.parameters // (strenv(GLOBAL_PARTITION_STORAGE_PARAMETERS) | fromjson)' <<<"${table}")"
 
-        template_table="$(yq '.template' <<< "${table}")"
+        template_table="$(yq '.template' <<<"${table}")"
 
         output_filename="$(pgp-get-migration-filename -t "${output_file_template}" -d "${temp_migration_directory}" -m "${description}")"
 
         echo "INFO: Making partitions for ${table_schema}.${table_name}"
 
-        partition_schema="$(yq '.partition.schema // strenv(GLOBAL_PARTITION_SCHEMA)' <<< "${table}")"
+        partition_schema="$(yq '.partition.schema // strenv(GLOBAL_PARTITION_SCHEMA)' <<<"${table}")"
         # If no schema is provided either in the partition config or in the global config, default to table schema.
-        if [[ "${partition_schema}" == "null" ]]; then
+        if [[ ${partition_schema} == "null" ]]; then
             echo "INFO: Partition schema not provided. Defaulting to parent schema '${table_schema}'"
             partition_schema="${table_schema}"
         fi
 
-        partition_start_timestamp="$(yq '.partition.start_timestamp // strenv(GLOBAL_START_TIMESTAMP)' <<< "${table}")"
+        partition_start_timestamp="$(yq '.partition.start_timestamp // strenv(GLOBAL_START_TIMESTAMP)' <<<"${table}")"
 
-        if [[ "${partition_start_timestamp}" == "LATEST_PARTITION" ]]; then
+        if [[ ${partition_start_timestamp} == "LATEST_PARTITION" ]]; then
 
             echo "INFO: Using latest partition for partition start timestamp"
 
@@ -182,7 +182,7 @@ function make_partitions() {
                 # KCOV_EXCL_STOP
             fi
 
-            if [[ -z "${partition_start_timestamp}" ]]; then
+            if [[ -z ${partition_start_timestamp} ]]; then
                 make_failed_tables["${table_schema}.${table_name}"]="No latest partition exists for table ${table_schema}.${table_name}"
                 continue
             fi
@@ -201,10 +201,10 @@ function make_partitions() {
                 # KCOV_EXCL_STOP
             fi
 
-            if [[ -n "${latest_partition_upper_bound}" ]]; then
+            if [[ -n ${latest_partition_upper_bound} ]]; then
                 echo "INFO: Table ${table_schema}.${table_name} already has partitions; using the latest partition's upper bound (${latest_partition_upper_bound}) instead of ${configured_start_timestamp}"
                 partition_start_timestamp="${latest_partition_upper_bound}"
-            elif [[ "${configured_start_timestamp}" == "NOW" ]]; then
+            elif [[ ${configured_start_timestamp} == "NOW" ]]; then
                 echo "INFO: Using current timestamp for partition start timestamp"
 
                 if ! partition_start_timestamp="$(
@@ -228,7 +228,7 @@ EOF
             fi
         fi
 
-        if [[ "${template_table}" == "DEFAULT_PARTITION" ]]; then
+        if [[ ${template_table} == "DEFAULT_PARTITION" ]]; then
 
             echo "INFO: Using default partition as template table"
 
@@ -255,15 +255,15 @@ EOF
                 continue
             fi
 
-            if [[ -z "${result}" ]]; then
+            if [[ -z ${result} ]]; then
                 make_failed_tables["${table_schema}.${table_name}"]="Default partition for table ${table_schema}.${table_name} not found"
                 continue
             fi
 
-            template_table_schema="$(yq -r '.partition_schema' <<< "${result}")"
-            template_table_name="$(yq -r '.partition_name' <<< "${result}")"
+            template_table_schema="$(yq -r '.partition_schema' <<<"${result}")"
+            template_table_name="$(yq -r '.partition_name' <<<"${result}")"
 
-        elif [[ "${template_table}" == "LATEST_PARTITION" ]]; then
+        elif [[ ${template_table} == "LATEST_PARTITION" ]]; then
             echo "INFO: Using latest partition as template table"
 
             if ! result="$(
@@ -289,15 +289,15 @@ EOF
                 continue
             fi
 
-            if [[ -z "${result}" ]]; then
+            if [[ -z ${result} ]]; then
                 make_failed_tables["${table_schema}.${table_name}"]="Latest partition for table ${table_schema}.${table_name} not found"
                 continue
             fi
 
-            template_table_schema="$(yq -r '.partition_schema' <<< "${result}")"
-            template_table_name="$(yq -r '.partition_name' <<< "${result}")"
+            template_table_schema="$(yq -r '.partition_schema' <<<"${result}")"
+            template_table_name="$(yq -r '.partition_name' <<<"${result}")"
 
-        elif [[ "${template_table}" == "CURRENT_PARTITION" ]]; then
+        elif [[ ${template_table} == "CURRENT_PARTITION" ]]; then
             echo "INFO: Using current partition as template table"
 
             if ! result="$(
@@ -323,21 +323,21 @@ EOF
                 continue
             fi
 
-            if [[ -z "${result}" ]]; then
+            if [[ -z ${result} ]]; then
                 make_failed_tables["${table_schema}.${table_name}"]="Current partition for table ${table_schema}.${table_name} not found"
                 continue
             fi
 
-            template_table_schema="$(yq -r '.partition_schema' <<< "${result}")"
-            template_table_name="$(yq -r '.partition_name' <<< "${result}")"
+            template_table_schema="$(yq -r '.partition_schema' <<<"${result}")"
+            template_table_name="$(yq -r '.partition_name' <<<"${result}")"
 
-        elif [[ "${template_table}" == "null" ]]; then
+        elif [[ ${template_table} == "null" ]]; then
             template_table_schema=null
             template_table_name=null
 
         else
-            template_table_schema="$(yq '.schema' <<< "${template_table}")"
-            template_table_name="$(yq '.name' <<< "${template_table}")"
+            template_table_schema="$(yq '.schema' <<<"${template_table}")"
+            template_table_name="$(yq '.name' <<<"${template_table}")"
 
             template_table_exists="$(
                 psql \
@@ -350,9 +350,9 @@ EOF
                     <<EOF
 SELECT pgpartix.table_exists(p_table_schema => :'table_schema', p_table_name => :'table_name');
 EOF
-)"
+            )"
 
-            if [[ "${template_table_exists}" = "f" ]]; then
+            if [[ ${template_table_exists} == "f" ]]; then
                 make_failed_tables["${table_schema}.${table_name}"]="Template table ${template_table_schema}.${template_table_name} does not exist"
                 continue
             fi
@@ -365,36 +365,36 @@ EOF
         table_output_file="${table_output_file}.sql"
 
         if ! psql \
-                 --tuples-only \
-                 --no-align \
-                 --quiet \
-                 --variable "ON_ERROR_STOP=1" \
-                 --variable table_schema="${table_schema}" \
-                 --variable table_name="${table_name}" \
-                 --variable partition_name_template="${partition_name_template}" \
-                 --variable partition_interval="${partition_interval}" \
-                 --variable partition_start_timestamp="${partition_start_timestamp}" \
-                 --variable past_partitions="${past_partitions}" \
-                 --variable future_partitions="${future_partitions}" \
-                 --variable default_partition_name_template="${default_partition_name_template}" \
-                 --variable create_default_partition="${create_default_partition}" \
-                 --variable partition_schema="${partition_schema}" \
-                 --variable partition_tablespace="${partition_tablespace}" \
-                 --variable index_name_template="${index_name_template}" \
-                 --variable index_tablespace="${index_tablespace}" \
-                 --variable constraint_name_templates="${constraint_name_templates}" \
-                 --variable trigger_name_template="${trigger_name_template}" \
-                 --variable partition_storage_mode="${partition_storage_mode}" \
-                 --variable partition_storage_parameters="${partition_storage_parameters}" \
-                 --variable template_table_schema="${template_table_schema}" \
-                 --variable template_table_name="${template_table_name}" \
-                 --variable retention="${retention}" \
-                 --variable timezone="${timezone}" \
-                 --variable skip_overlapping="${skip_overlapping}" \
-                 --variable idempotent="${idempotent}" \
-                 --output="${table_output_file}" \
+            --tuples-only \
+            --no-align \
+            --quiet \
+            --variable "ON_ERROR_STOP=1" \
+            --variable table_schema="${table_schema}" \
+            --variable table_name="${table_name}" \
+            --variable partition_name_template="${partition_name_template}" \
+            --variable partition_interval="${partition_interval}" \
+            --variable partition_start_timestamp="${partition_start_timestamp}" \
+            --variable past_partitions="${past_partitions}" \
+            --variable future_partitions="${future_partitions}" \
+            --variable default_partition_name_template="${default_partition_name_template}" \
+            --variable create_default_partition="${create_default_partition}" \
+            --variable partition_schema="${partition_schema}" \
+            --variable partition_tablespace="${partition_tablespace}" \
+            --variable index_name_template="${index_name_template}" \
+            --variable index_tablespace="${index_tablespace}" \
+            --variable constraint_name_templates="${constraint_name_templates}" \
+            --variable trigger_name_template="${trigger_name_template}" \
+            --variable partition_storage_mode="${partition_storage_mode}" \
+            --variable partition_storage_parameters="${partition_storage_parameters}" \
+            --variable template_table_schema="${template_table_schema}" \
+            --variable template_table_name="${template_table_name}" \
+            --variable retention="${retention}" \
+            --variable timezone="${timezone}" \
+            --variable skip_overlapping="${skip_overlapping}" \
+            --variable idempotent="${idempotent}" \
+            --output="${table_output_file}" \
             2>"${error_file}" \
-            <<EOF
+            <<EOF; then
 -- KCOV_EXCL_START
 SELECT *
   FROM pgpartix.make_partitions(
@@ -423,24 +423,22 @@ SELECT *
   , p_idempotent => :'idempotent'
 )
 EOF
-# KCOV_EXCL_STOP
-
-        then
+            # KCOV_EXCL_STOP
             make_failed_tables["${table_schema}.${table_name}"]=$(<"${error_file}")
             rm -f "${table_output_file}"
             continue
         fi
 
-        if [[ -s "${table_output_file}" ]]; then
+        if [[ -s ${table_output_file} ]]; then
             if ! pgrubic format "${table_output_file}" >"${error_file}" 2>&1; then
                 echo "WARNING: failed to format generated SQL for ${table_schema}.${table_name}, writing unformatted SQL: $(<"${error_file}")" >&2
             fi
 
             output_file="${temp_migration_directory}/${output_filename}"
             # If the output file is already part of the generated output files, we append to it.
-            if [[ -n "${generated_output_files[${output_filename}]+_}" ]]; then
-                printf '\n' >> "${output_file}"
-                cat "${table_output_file}" >> "${output_file}"
+            if [[ -n ${generated_output_files[${output_filename}]+_} ]]; then
+                printf '\n' >>"${output_file}"
+                cat "${table_output_file}" >>"${output_file}"
                 rm "${table_output_file}"
             else
                 mv "${table_output_file}" "${output_file}"
@@ -449,7 +447,7 @@ EOF
             fi
 
             echo "INFO: Made partitions for ${table_schema}.${table_name}"
-            printf "\n- Makes partitions for \`%s\`\n\n" "${table_schema}.${table_name}" >> /src/partition_lifecycle.log
+            printf "\n- Makes partitions for \`%s\`\n\n" "${table_schema}.${table_name}" >>/src/partition_lifecycle.log
         else
             echo "INFO: No partitions made for ${table_schema}.${table_name}"
             rm "${table_output_file}"
@@ -462,12 +460,12 @@ function expire_partitions() {
     local config="$1"
 
     while read -r table; do
-        table_schema="$(yq '.schema' <<< "${table}")"
-        table_name="$(yq '.name' <<< "${table}")"
+        table_schema="$(yq '.schema' <<<"${table}")"
+        table_name="$(yq '.name' <<<"${table}")"
 
-        output_file_template="$(yq '.output.file.naming.template // strenv(GLOBAL_OUTPUT_FILE_TEMPLATE)' <<< "${table}")"
+        output_file_template="$(yq '.output.file.naming.template // strenv(GLOBAL_OUTPUT_FILE_TEMPLATE)' <<<"${table}")"
 
-        description="$(yq '.description.expire // strenv(GLOBAL_DESCRIPTION_EXPIRE)' <<< "${table}")"
+        description="$(yq '.description.expire // strenv(GLOBAL_DESCRIPTION_EXPIRE)' <<<"${table}")"
         # Replace parent_table_schema and parent_table_name placeholders in the description.
         description="${description//\{parent_table_schema\}/$table_schema}"
         description="${description//\{parent_table_name\}/$table_name}"
@@ -476,28 +474,28 @@ function expire_partitions() {
 
         echo "INFO: Expiring partitions for ${table_schema}.${table_name}"
 
-        retention="$(yq '.partition.retention.interval // strenv(GLOBAL_RETENTION)' <<< "${table}")"
+        retention="$(yq '.partition.retention.interval // strenv(GLOBAL_RETENTION)' <<<"${table}")"
 
         # Because yq default value operator is used to provide alternative (or default) values
         # when a particular expression is either null or false, we cannot use it here as it would
         # instead override partition level boolean values, instead we override them if they are not set.
-        detach_only="$(yq '.partition.retention.detach_only' <<< "${table}")"
-        if [[ "${detach_only}" == "null" ]]; then
+        detach_only="$(yq '.partition.retention.detach_only' <<<"${table}")"
+        if [[ ${detach_only} == "null" ]]; then
             detach_only="${GLOBAL_DETACH_ONLY}"
         fi
 
-        detach_first="$(yq '.partition.retention.detach_first' <<< "${table}")"
-        if [[ "${detach_first}" == "null" ]]; then
+        detach_first="$(yq '.partition.retention.detach_first' <<<"${table}")"
+        if [[ ${detach_first} == "null" ]]; then
             detach_first="${GLOBAL_DETACH_FIRST}"
         fi
 
-        detach_concurrently="$(yq '.partition.retention.detach_concurrently' <<< "${table}")"
-        if [[ "${detach_concurrently}" == "null" ]]; then
+        detach_concurrently="$(yq '.partition.retention.detach_concurrently' <<<"${table}")"
+        if [[ ${detach_concurrently} == "null" ]]; then
             detach_concurrently="${GLOBAL_DETACH_CONCURRENTLY}"
         fi
 
-        idempotent="$(yq '.idempotent' <<< "${table}")"
-        if [[ "${idempotent}" == "null" ]]; then
+        idempotent="$(yq '.idempotent' <<<"${table}")"
+        if [[ ${idempotent} == "null" ]]; then
             idempotent="${GLOBAL_IDEMPOTENT}"
         fi
 
@@ -507,21 +505,21 @@ function expire_partitions() {
         table_output_file="${table_output_file}.sql"
 
         if ! psql \
-                 --tuples-only \
-                 --no-align \
-                 --quiet \
-                 --variable "ON_ERROR_STOP=1" \
-                 --variable table_schema="${table_schema}" \
-                 --variable table_name="${table_name}" \
-                 --variable retention="${retention}" \
-                 --variable detach_only="${detach_only}" \
-                 --variable detach_first="${detach_first}" \
-                 --variable detach_concurrently="${detach_concurrently}" \
-                 --variable idempotent="${idempotent}" \
-                 --variable timezone="${timezone}" \
-                 --output="${table_output_file}" \
+            --tuples-only \
+            --no-align \
+            --quiet \
+            --variable "ON_ERROR_STOP=1" \
+            --variable table_schema="${table_schema}" \
+            --variable table_name="${table_name}" \
+            --variable retention="${retention}" \
+            --variable detach_only="${detach_only}" \
+            --variable detach_first="${detach_first}" \
+            --variable detach_concurrently="${detach_concurrently}" \
+            --variable idempotent="${idempotent}" \
+            --variable timezone="${timezone}" \
+            --output="${table_output_file}" \
             2>"${error_file}" \
-            <<EOF
+            <<EOF; then
 -- KCOV_EXCL_START
 SELECT *
   FROM pgpartix.expire_partitions(
@@ -535,24 +533,22 @@ SELECT *
   , p_idempotent=>:'idempotent'
 )
 EOF
-# KCOV_EXCL_STOP
-
-        then
+            # KCOV_EXCL_STOP
             expire_failed_tables["${table_schema}.${table_name}"]=$(<"${error_file}")
             rm -f "${table_output_file}"
             continue
         fi
 
-        if [[ -s "${table_output_file}" ]]; then
+        if [[ -s ${table_output_file} ]]; then
             if ! pgrubic format "${table_output_file}" >"${error_file}" 2>&1; then
                 echo "WARNING: failed to format generated SQL for ${table_schema}.${table_name}, writing unformatted SQL: $(<"${error_file}")" >&2
             fi
 
             output_file="${temp_migration_directory}/${output_filename}"
             # If the output file is already part of the generated output files, we append to it.
-            if [[ -n "${generated_output_files[${output_filename}]+_}" ]]; then
-                printf '\n' >> "${output_file}"
-                cat "${table_output_file}" >> "${output_file}"
+            if [[ -n ${generated_output_files[${output_filename}]+_} ]]; then
+                printf '\n' >>"${output_file}"
+                cat "${table_output_file}" >>"${output_file}"
                 rm "${table_output_file}"
             else
                 mv "${table_output_file}" "${output_file}"
@@ -560,7 +556,7 @@ EOF
             fi
 
             echo "INFO: Expired partitions for ${table_schema}.${table_name}"
-            printf "\n- Expires partitions for \`%s\`\n\n" "${table_schema}.${table_name}" >> /src/partition_lifecycle.log
+            printf "\n- Expires partitions for \`%s\`\n\n" "${table_schema}.${table_name}" >>/src/partition_lifecycle.log
         else
             echo "INFO: No partitions expired for ${table_schema}.${table_name}"
             rm "${table_output_file}"
@@ -640,15 +636,15 @@ function run_lifecycle_for_config() {
     GLOBAL_DETACH_CONCURRENTLY="$(yq '.lifecycle.partition.retention.detach_concurrently // strenv(DEFAULT_DETACH_CONCURRENTLY)' "${config}")"
 
     export GLOBAL_PARTITION_TABLESPACE GLOBAL_INDEX_TABLESPACE GLOBAL_PARTITION_SCHEMA \
-           GLOBAL_PARTITION_NAME_TEMPLATE GLOBAL_PAST GLOBAL_FUTURE GLOBAL_INTERVAL GLOBAL_START_TIMESTAMP GLOBAL_RETENTION \
-           GLOBAL_DEFAULT_PARTITION_NAME_TEMPLATE GLOBAL_CREATE_DEFAULT_PARTITION GLOBAL_SKIP_OVERLAPPING GLOBAL_PARTITION_STORAGE_PARAMETERS \
-           GLOBAL_PARTITION_STORAGE_MODE GLOBAL_IDEMPOTENT GLOBAL_DESCRIPTION_MAKE GLOBAL_DESCRIPTION_EXPIRE GLOBAL_OUTPUT_FILE_TEMPLATE \
-           GLOBAL_INDEX_NAME_TEMPLATE GLOBAL_CONSTRAINT_NAME_TEMPLATE \
-           GLOBAL_PRIMARY_KEY_CONSTRAINT_NAME_TEMPLATE \
-           GLOBAL_UNIQUE_CONSTRAINT_NAME_TEMPLATE GLOBAL_FOREIGN_KEY_CONSTRAINT_NAME_TEMPLATE \
-           GLOBAL_CHECK_CONSTRAINT_NAME_TEMPLATE GLOBAL_EXCLUSION_CONSTRAINT_NAME_TEMPLATE \
-           GLOBAL_TRIGGER_NAME_TEMPLATE \
-           GLOBAL_DETACH_ONLY GLOBAL_DETACH_FIRST GLOBAL_DETACH_CONCURRENTLY
+        GLOBAL_PARTITION_NAME_TEMPLATE GLOBAL_PAST GLOBAL_FUTURE GLOBAL_INTERVAL GLOBAL_START_TIMESTAMP GLOBAL_RETENTION \
+        GLOBAL_DEFAULT_PARTITION_NAME_TEMPLATE GLOBAL_CREATE_DEFAULT_PARTITION GLOBAL_SKIP_OVERLAPPING GLOBAL_PARTITION_STORAGE_PARAMETERS \
+        GLOBAL_PARTITION_STORAGE_MODE GLOBAL_IDEMPOTENT GLOBAL_DESCRIPTION_MAKE GLOBAL_DESCRIPTION_EXPIRE GLOBAL_OUTPUT_FILE_TEMPLATE \
+        GLOBAL_INDEX_NAME_TEMPLATE GLOBAL_CONSTRAINT_NAME_TEMPLATE \
+        GLOBAL_PRIMARY_KEY_CONSTRAINT_NAME_TEMPLATE \
+        GLOBAL_UNIQUE_CONSTRAINT_NAME_TEMPLATE GLOBAL_FOREIGN_KEY_CONSTRAINT_NAME_TEMPLATE \
+        GLOBAL_CHECK_CONSTRAINT_NAME_TEMPLATE GLOBAL_EXCLUSION_CONSTRAINT_NAME_TEMPLATE \
+        GLOBAL_TRIGGER_NAME_TEMPLATE \
+        GLOBAL_DETACH_ONLY GLOBAL_DETACH_FIRST GLOBAL_DETACH_CONCURRENTLY
 
     directory="$(yq '.lifecycle.directory // strenv(DIRECTORY)' "${config}")"
     timezone="$(yq '.lifecycle.timezone // strenv(DEFAULT_TIMEZONE)' "${config}")"
@@ -689,14 +685,14 @@ function run_lifecycle_for_config() {
             "${directory}/${output_filename}"
     done
 
-    if [[ "${#make_failed_tables[@]}" -gt 0 || "${#expire_failed_tables[@]}" -gt 0 ]]; then
-        if [[ "${#make_failed_tables[@]}" -gt 0 ]]; then
+    if [[ ${#make_failed_tables[@]} -gt 0 || ${#expire_failed_tables[@]} -gt 0 ]]; then
+        if [[ ${#make_failed_tables[@]} -gt 0 ]]; then
             echo "ERROR: making partitions failed for ${#make_failed_tables[@]} table(s):" >&2
             for table in "${!make_failed_tables[@]}"; do
                 echo "  '${table}': ${make_failed_tables[${table}]}" >&2
             done
         fi
-        if [[ "${#expire_failed_tables[@]}" -gt 0 ]]; then
+        if [[ ${#expire_failed_tables[@]} -gt 0 ]]; then
             echo "ERROR: expiring partitions failed for ${#expire_failed_tables[@]} table(s):" >&2
             for table in "${!expire_failed_tables[@]}"; do
                 echo "  '${table}': ${expire_failed_tables[${table}]}" >&2
@@ -711,14 +707,14 @@ function run_lifecycle_for_config() {
 }
 
 function run_lifecycle {
-    if [[ -d "${config_path}" ]]; then
+    if [[ -d ${config_path} ]]; then
         echo "INFO: Applying configs from ${config_path}"
 
-        find "${config_path}" -type f \( -iname "*.yaml" -o -iname "*.yml" \) \
-        | sort -V \
-        | while IFS= read -r config; do
-            run_lifecycle_for_config "${config}"
-        done
+        find "${config_path}" -type f \( -iname "*.yaml" -o -iname "*.yml" \) |
+            sort -V |
+            while IFS= read -r config; do
+                run_lifecycle_for_config "${config}"
+            done
 
         echo "INFO: Applied configs from ""${config_path}"""
     else

@@ -2,6 +2,9 @@
 # yamllint disable rule:line-length
 name: CI
 
+# Each job should declare the permissions it needs.
+permissions: {}
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -18,35 +21,39 @@ on:
   schedule:
     - cron: "0 0 * * *"  # Run daily at midnight UTC
 
-env:
-  DEFAULT_PYTHON_VERSION: 3.12
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     name: Run pre-commit
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
           version: "0.13.8"
 
       - name: Install dependencies
-        run: uv sync --locked --only-group tooling --only-group dev
+        run: uv sync --locked --no-build --only-group tooling --only-group dev
 
       - name: Run pre-commit
-        run: uv run --locked --only-group tooling --only-group dev pre-commit run --show-diff-on-failure --all-files
+        run: uv run --locked --no-build --only-group tooling --only-group dev pre-commit run --show-diff-on-failure --all-files
 
   coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     name: Run coverage
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Run coverage
         env:
@@ -55,6 +62,8 @@ jobs:
 
   test-postgres:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -67,7 +76,9 @@ jobs:
     name: Run tests on PostgreSQL ${{ matrix.postgresql }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Run tests on PostgreSQL ${{ matrix.postgresql }}
         env:
@@ -76,18 +87,26 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Run integration test
         run: tests/run-integration-test.sh
 
   ensure-up-to-date-schema-doc:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Ensure schema doc is up to date
         run: tools/ensure_up_to_date_schema_doc.sh
