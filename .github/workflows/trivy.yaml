@@ -56,7 +56,7 @@ jobs:
         if: ${{ always() && hashFiles(format('{0}.{1}', env.TRIVY_REPO_REPORT, env.TRIVY_REPORT_FORMAT)) != '' }}
         # Retain the report below when Code Scanning is unavailable.
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea  # v4
         with:
           sarif_file: ${{ env.TRIVY_REPO_REPORT }}.${{ env.TRIVY_REPORT_FORMAT }}
           category: trivy-repo
@@ -113,7 +113,7 @@ jobs:
         if: ${{ always() && hashFiles(format('{0}-pg{1}.{2}', env.TRIVY_IMAGE_REPORT, matrix.postgresql, env.TRIVY_REPORT_FORMAT)) != '' }}
         # Retain the report below when Code Scanning is unavailable.
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066  # v4
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea  # v4
         with:
           sarif_file: ${{ env.TRIVY_IMAGE_REPORT }}-pg${{ matrix.postgresql }}.${{ env.TRIVY_REPORT_FORMAT }}
           category: trivy-image-pg${{ matrix.postgresql }}
