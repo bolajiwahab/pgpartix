@@ -1,6 +1,6 @@
 [project]
 name = "pgpartix"
-version = "0.16.0"
+version = "0.16.1"
 requires-python = ">=3.12"
 dependencies = [
     "check-jsonschema==0.39.0",

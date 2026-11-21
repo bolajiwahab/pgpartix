@@ -1,3 +1,15 @@
+## 0.16.1 (2026-11-21)
+
+### Fix
+
+- **docker**: update runtime images (#153)
+- pass the partition lifecycle workflow's inputs through env, harden workflows and dev tools (#155)
+- replace single bracket with doubcle bracket for conditional checks in shell scripts (#149)
+
+### Perf
+
+- compile Python bytecode in the image and skip durability in the test cluster (#160)
+
 ## 0.16.0 (2026-11-15)
 
 ### BREAKING CHANGE
