@@ -82,29 +82,6 @@ OPTIONS:
 
 It uses the same connection defaults and optional `PGP_*` overrides as the lifecycle commands.
 
-## `pgp-get-migration-filename`
-
-Resolves a migration filename template. It is used internally by the lifecycle generator and is available for debugging templates.
-
-```text
-OPTIONS:
-  -t  Filename template
-  -d  Existing migration directory
-  -m  Migration description
-  -h  Show help
-```
-
-Examples:
-
-```bash
-pgp-get-migration-filename \
-  -t 'V{integer:3}__{description}.sql' \
-  -d migrations/partitions \
-  -m 'Make partitions for public transactions'
-```
-
-See [Output filenames](configuration.md#output-filenames) for every placeholder.
-
 ## `pgp-gh-create-pr`
 
 Optionally creates or updates a GitHub pull request containing generated repository changes. It is designed to run inside a CI job (for example, the reusable GitHub Actions workflow) against a repository already checked out at the desired base branch - it branches from the current `HEAD` rather than fetching or resetting to a remote ref itself, so it is not intended for ad hoc local invocation. Migration generation itself does not depend on this command; users may commit and push locally, or publish through another CI/CD system or scheduler instead.

@@ -41,8 +41,11 @@ update_changelog_on_bump = true
 annotated_tag = true
 bump_message = "chore(release): release $new_version"
 breaking_change_exclamation_in_title = true
-# The image tags in the docs, such as ghcr.io/bolajiwahab/pgpartix:0.16.0-pg18.
+# The image tags and reusable workflow references in the docs, such as
+# ghcr.io/bolajiwahab/pgpartix:0.16.1-pg18 and
+# bolajiwahab/pgpartix/.github/workflows/partition-lifecycle.yaml@0.16.1.
 version_files = [
-    "docs/docs/getting-started.md:ghcr.io/bolajiwahab/pgpartix",
-    "docs/docs/github-actions.md:ghcr.io/bolajiwahab/pgpartix",
+    "README.md:bolajiwahab/pgpartix",
+    "docs/docs/getting-started.md:bolajiwahab/pgpartix",
+    "docs/docs/github-actions.md:bolajiwahab/pgpartix",
 ]
