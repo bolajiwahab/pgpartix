@@ -27,7 +27,8 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 # Keep the disposable cluster under the directory owned by PGP_OS_USER.
 ENV PGDATA="/var/lib/pgpartix/data"
 
-# Install OS dependencies
+# Install OS dependencies. runuser lets a container running as root start
+# PostgreSQL as PGP_OS_USER.
 RUN apk add --no-cache \
         'bash~5.3' \
         'ca-certificates~20261020' \
@@ -36,6 +37,7 @@ RUN apk add --no-cache \
         'git~2.54' \
         'github-cli~2.97' \
         'python3~3.14' \
+        'runuser~2.42' \
     && apk add --no-cache --virtual .download-deps 'wget~1.25' \
     # Install yq
     && yq_binary="yq_${TARGETOS}_${TARGETARCH}" \
