@@ -17,10 +17,10 @@ dev = [
     "zizmor==1.32.0",
 ]
 tooling = [
-    "uv==0.13.8",
+    "uv==0.13.9",
 ]
 docs = [
-    "zensical==0.1.1",
+    "zensical==0.1.2",
 ]
 release = [
     "commitizen==4.19.3",
