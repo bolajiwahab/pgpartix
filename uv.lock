@@ -714,7 +714,7 @@ tooling = [
 [package.metadata]
 requires-dist = [
     { name = "check-jsonschema", specifier = "==0.39.0" },
-    { name = "pgrubic", specifier = "==4.1.1" },
+    { name = "pgrubic", specifier = "==4.2.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -732,7 +732,7 @@ tooling = [{ name = "uv", specifier = "==0.13.9" }]
 
 [[package]]
 name = "pgrubic"
-version = "4.1.1"
+version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "case-converter" },
@@ -746,9 +746,9 @@ dependencies = [
     { name = "rich" },
     { name = "toml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8c/7b/94358a22210b93d3272e272ca6ff3200a7a77ddd3ea9d9f483c0a94cc99c/pgrubic-4.1.1.tar.gz", hash = "sha256:4e09f6c0d09f4920677bf1469362646b597f05357513dbb36fbcd0792c5db64c", size = 130308, upload-time = "2026-11-14T20:05:48.628Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/cd/43ebd2804dc262fda2b0a8d9e34efa27e746983959a005748f5e8cfc94e3/pgrubic-4.2.0.tar.gz", hash = "sha256:964febe53f37ecf6f7da5dc62279a01f4d5bd566672426d5bc05754ebfd1d18b", size = 130486, upload-time = "2026-11-21T02:07:51.621Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/ad/3d3d6b51511409cdd98177d23874811095f95a14e9cea06b7cb0a87b54a0/pgrubic-4.1.1-py3-none-any.whl", hash = "sha256:f11c50e7f892ab362f2f66e1c133d38b9dfb2e524141899b18bf48866bf19c9c", size = 207546, upload-time = "2026-11-14T20:05:47.089Z" },
+    { url = "https://files.pythonhosted.org/packages/76/b6/f8c251564df9184f894c050e829ac753c5875e31e2e26558f896c402a713/pgrubic-4.2.0-py3-none-any.whl", hash = "sha256:9aecbabca7cd091ef680832e25e9749ee604b253a5e0d0226094c69925751e44", size = 207982, upload-time = "2026-11-21T02:07:50.075Z" },
 ]
 
 [[package]]

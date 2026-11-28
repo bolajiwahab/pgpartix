@@ -4,7 +4,7 @@ version = "0.16.2"
 requires-python = ">=3.12"
 dependencies = [
     "check-jsonschema==0.39.0",
-    "pgrubic==4.1.1",
+    "pgrubic==4.2.0",
 ]
 
 [dependency-groups]
